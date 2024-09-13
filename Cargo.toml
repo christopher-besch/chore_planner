@@ -1,0 +1,23 @@
+[package]
+name = "chore_planner"
+version = "0.1.0"
+author = "Christopher Besch <mail@chris-besch.com>"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.40.0", features = ["full"] }
+anyhow = "1.0.87"
+chrono = "0.4.38"
+rand = { version = "0.8.5", features = ["std_rng"] }
+sqlx = { version = "0.8.2", features = ["sqlite", "runtime-tokio"] }
+
+# formatting
+tabled = "0.16.0"
+
+# command parsing
+shellwords = "1.1.0"
+clap = { version = "4.5.17", features = ["derive", "wrap_help"] }
+
+# telegram
+teloxide = "0.13.0"
+futures-util = "0.3.30"
