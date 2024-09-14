@@ -1126,7 +1126,7 @@ async fn test_get_available_tenants() {
 
 #[tokio::test]
 async fn test_calc_tenant_distribution() {
-    let mut db = prepare_db().await;
+    let db = prepare_db().await;
     let tenants = vec![
         ("Alex".to_string(), -0.75),
         ("Bob".to_string(), -0.75),
@@ -1150,7 +1150,7 @@ async fn test_calc_tenant_distribution() {
 
 #[tokio::test]
 async fn test_calc_tenant_distribution_all_zero() {
-    let mut db = prepare_db().await;
+    let db = prepare_db().await;
     let tenants = vec![
         ("Alex".to_string(), 0.0),
         ("Bob".to_string(), 0.0),

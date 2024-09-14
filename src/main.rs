@@ -33,9 +33,11 @@ async fn run_loop<T: MessagableBot + PollableBot>(mut bot: T) {
         .parse::<f64>()
         .context("failed to convert CHORE_PLANNER_GAMMA to f64")
         .unwrap();
+    let db_path = env::var("CHORE_PLANNER_DB_PATH")
+        .expect("the environment variable CHORE_PLANNER_DB_PATH must be provided");
 
     let mut db = Db::new(
-        "sqlite://chore_planner.sqlite",
+        &format!("sqlite://{}", db_path),
         Week::from(Local::now().date_naive()),
         weeks_to_plan,
         gamma,

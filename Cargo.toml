@@ -1,7 +1,7 @@
 [package]
 name = "chore_planner"
 version = "0.1.0"
-author = "Christopher Besch <mail@chris-besch.com>"
+authors = ["Christopher Besch <mail@chris-besch.com>"]
 edition = "2021"
 
 [dependencies]
@@ -21,3 +21,4 @@ clap = { version = "4.5.17", features = ["derive", "wrap_help"] }
 # telegram
 teloxide = "0.13.0"
 futures-util = "0.3.30"
+openssl = { version = "0.10.66", features = ["vendored"] }
