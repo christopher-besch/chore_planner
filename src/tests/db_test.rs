@@ -1285,7 +1285,7 @@ async fn test_update_plan() {
         .unwrap();
     assert_eq!(
         out.mono_msg,
-        r#"# Spüldienst on 33/2024: Bob
+        r#"# Spüldienst on 33/2024 (in 0 weeks): Bob
 Bob, you have been chosen for the Spüldienst on 33/2024.
 According to your effective score -0.58 you've had a probability of 25% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1294,7 +1294,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 33/2024: Bob
+# Mülldienst on 33/2024 (in 0 weeks): Bob
 Bob, you have been chosen for the Mülldienst on 33/2024.
 According to your effective score 0.44 you've had a probability of 27% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1335,7 +1335,7 @@ Take out the trash.
         .unwrap();
     assert_eq!(
         out.mono_msg,
-        r#"# Spüldienst on 34/2024: Olli
+        r#"# Spüldienst on 34/2024 (in 1 week): Olli
 Olli, you have been chosen for the Spüldienst on 34/2024.
 According to your effective score 0.30 you've had a probability of 16% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1344,7 +1344,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 34/2024: Jonas
+# Mülldienst on 34/2024 (in 1 week): Jonas
 Jonas, you have been chosen for the Mülldienst on 34/2024.
 According to your effective score 0.03 you've had a probability of 25% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1353,7 +1353,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Spüldienst on 35/2024: Olli
+# Spüldienst on 35/2024 (in 2 weeks): Olli
 Olli, you have been chosen for the Spüldienst on 35/2024.
 According to your effective score 1.48 you've had a probability of 16% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1362,7 +1362,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 35/2024: Alex
+# Mülldienst on 35/2024 (in 2 weeks): Alex
 Alex, you have been chosen for the Mülldienst on 35/2024.
 According to your effective score -1.00 you've had a probability of 38% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1371,7 +1371,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Spüldienst on 36/2024: Till
+# Spüldienst on 36/2024 (in 3 weeks): Till
 Till, you have been chosen for the Spüldienst on 36/2024.
 According to your effective score -0.43 you've had a probability of 17% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1380,7 +1380,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 36/2024: Alex
+# Mülldienst on 36/2024 (in 3 weeks): Alex
 Alex, you have been chosen for the Mülldienst on 36/2024.
 According to your effective score -0.38 you've had a probability of 27% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1389,7 +1389,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Spüldienst on 37/2024: Alex
+# Spüldienst on 37/2024 (in 4 weeks): Alex
 Alex, you have been chosen for the Spüldienst on 37/2024.
 According to your effective score -0.05 you've had a probability of 17% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1398,7 +1398,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 37/2024: Jonas
+# Mülldienst on 37/2024 (in 4 weeks): Jonas
 Jonas, you have been chosen for the Mülldienst on 37/2024.
 According to your effective score 0.07 you've had a probability of 25% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1465,7 +1465,7 @@ async fn test_create_chore_update() {
         .unwrap();
     assert_eq!(
         out.mono_msg,
-        r#"# Clean the Furnace on 33/2024: Till
+        r#"# Clean the Furnace on 33/2024 (in 0 weeks): Till
 Till, you have been chosen for the Clean the Furnace on 33/2024.
 According to your effective score -0.17 you've had a probability of 20% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1474,7 +1474,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Clean the Furnace on 34/2024: Bob
+# Clean the Furnace on 34/2024 (in 1 week): Bob
 Bob, you have been chosen for the Clean the Furnace on 34/2024.
 According to your effective score -0.92 you've had a probability of 18% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1483,7 +1483,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Clean the Furnace on 35/2024: Jonas
+# Clean the Furnace on 35/2024 (in 2 weeks): Jonas
 Jonas, you have been chosen for the Clean the Furnace on 35/2024.
 According to your effective score 0.12 you've had a probability of 20% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1492,7 +1492,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Clean the Furnace on 36/2024: Alex
+# Clean the Furnace on 36/2024 (in 3 weeks): Alex
 Alex, you have been chosen for the Clean the Furnace on 36/2024.
 According to your effective score 0.02 you've had a probability of 17% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1501,7 +1501,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Clean the Furnace on 37/2024: Bob
+# Clean the Furnace on 37/2024 (in 4 weeks): Bob
 Bob, you have been chosen for the Clean the Furnace on 37/2024.
 According to your effective score -0.32 you've had a probability of 18% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1611,7 +1611,7 @@ async fn test_exempt_update() {
 
 
 
-# Spüldienst on 33/2024: Jonas
+# Spüldienst on 33/2024 (in 0 weeks): Jonas
 Jonas, you have been chosen for the Spüldienst on 33/2024.
 According to your effective score -0.40 you've had a probability of 27% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1678,7 +1678,7 @@ async fn test_replan_update() {
         .unwrap();
     assert_eq!(
         out.mono_msg,
-        r#"# Spüldienst on 33/2024: Jonas
+        r#"# Spüldienst on 33/2024 (in 0 weeks): Jonas
 Jonas, you have been chosen for the Spüldienst on 33/2024.
 According to your effective score -0.18 you've had a probability of 26% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1687,7 +1687,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 33/2024: Alex
+# Mülldienst on 33/2024 (in 0 weeks): Alex
 Alex, you have been chosen for the Mülldienst on 33/2024.
 According to your effective score -0.54 you've had a probability of 60% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1806,7 +1806,7 @@ async fn test_move_out_update() {
 
 
 
-# Spüldienst on 33/2024: Jonas
+# Spüldienst on 33/2024 (in 0 weeks): Jonas
 Jonas, you have been chosen for the Spüldienst on 33/2024.
 According to your effective score -0.40 you've had a probability of 27% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1815,7 +1815,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 33/2024: Alex
+# Mülldienst on 33/2024 (in 0 weeks): Alex
 Alex, you have been chosen for the Mülldienst on 33/2024.
 According to your effective score -0.54 you've had a probability of 60% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1925,7 +1925,7 @@ Take out the trash.
 
 
 
-# Spüldienst on 33/2024: Till
+# Spüldienst on 33/2024 (in 0 weeks): Till
 Till, you have been chosen for the Spüldienst on 33/2024.
 According to your effective score -1.31 you've had a probability of 43% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1934,7 +1934,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 34/2024: Thomas
+# Mülldienst on 34/2024 (in 1 week): Thomas
 Thomas, you have been chosen for the Mülldienst on 34/2024.
 According to your effective score -3.37 you've had a probability of 60% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -1943,7 +1943,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 37/2024: Thomas
+# Mülldienst on 37/2024 (in 4 weeks): Thomas
 Thomas, you have been chosen for the Mülldienst on 37/2024.
 According to your effective score -2.38 you've had a probability of 60% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -2053,7 +2053,7 @@ Take out the trash.
 
 
 
-# Mülldienst on 35/2024: Thomas
+# Mülldienst on 35/2024 (in 2 weeks): Thomas
 Thomas, you have been chosen for the Mülldienst on 35/2024.
 According to your effective score 0.00 you've had a probability of 100% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -2062,7 +2062,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 36/2024: Thomas
+# Mülldienst on 36/2024 (in 3 weeks): Thomas
 Thomas, you have been chosen for the Mülldienst on 36/2024.
 According to your effective score 0.00 you've had a probability of 100% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -2071,7 +2071,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Spüldienst on 37/2024: Till
+# Spüldienst on 37/2024 (in 4 weeks): Till
 Till, you have been chosen for the Spüldienst on 37/2024.
 According to your effective score 0.94 you've had a probability of 28% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -2179,7 +2179,7 @@ Take out the trash.
 
 
 
-# Spüldienst on 34/2024: Thomas
+# Spüldienst on 34/2024 (in 1 week): Thomas
 Thomas, you have been chosen for the Spüldienst on 34/2024.
 According to your effective score -3.08 you've had a probability of 60% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -2188,7 +2188,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Spüldienst on 35/2024: Thomas
+# Spüldienst on 35/2024 (in 2 weeks): Thomas
 Thomas, you have been chosen for the Spüldienst on 35/2024.
 According to your effective score -2.08 you've had a probability of 60% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -2296,7 +2296,7 @@ Take out the trash.
 
 
 
-# Spüldienst on 34/2024: Till
+# Spüldienst on 34/2024 (in 1 week): Till
 Till, you have been chosen for the Spüldienst on 34/2024.
 According to your effective score 0.00 you've had a probability of 100% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -2305,7 +2305,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Spüldienst on 35/2024: Till
+# Spüldienst on 35/2024 (in 2 weeks): Till
 Till, you have been chosen for the Spüldienst on 35/2024.
 According to your effective score 0.00 you've had a probability of 100% to be chosen.
 If you're unhappy about that, type this to schedule someone else:

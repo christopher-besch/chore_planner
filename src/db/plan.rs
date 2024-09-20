@@ -271,8 +271,9 @@ INSERT INTO ChoreLog VALUES
             bail!("affected {} rows", affected_rows);
         }
 
+        let week_delta = week.db_week() - self.week.db_week();
         let mut msg = ReplyMsg::from_mono(&format!(
-            "# {1} on {2}: {0}
+            "# {1} on {2} (in {6} {7}): {0}
 {0}, you have been chosen for the {1} on {2}.
 According to your effective score {3:.2} you've had a probability of {4:.0}% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
@@ -283,7 +284,9 @@ Alternatively you can move out and then back in if you're on vacation.",
             week,
             score,
             prob * 100.0,
-            fmt_replan_cmd(&tenant, week)
+            fmt_replan_cmd(&tenant, week),
+            week_delta,
+            if week_delta == 1 { "week" } else { "weeks" },
         ));
         if let Some(tag) = tag {
             msg.tags.insert(tag);
