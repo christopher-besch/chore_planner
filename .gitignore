@@ -29,3 +29,4 @@ Cargo.lock
 
 *.gdb_history
 chore_planner.sqlite
+chore_planner.sqlite.bak
