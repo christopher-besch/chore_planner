@@ -88,7 +88,13 @@ FROM ChoreLog
             .collect::<Result<Vec<i32>>>()?;
 
         for poll_id in poll_ids {
-            let results = bot.stop_poll(poll_id).await?;
+            let results = bot.stop_poll(poll_id).await.unwrap_or_else(|e| {
+                eprintln!(
+                    "stopping poll failed, mark the poll {} as completed anyways, this can happen when you the bot is moved to a different chat: {}",
+                    poll_id, e
+                );
+                vec![]
+            });
             for (rating_str, count) in results {
                 // Figure out what to store in the db.
                 let rating = rating_str
