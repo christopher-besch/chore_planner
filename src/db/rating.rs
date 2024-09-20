@@ -2,17 +2,12 @@ use crate::{bot::PollableBot, db::*};
 
 use anyhow::Context;
 
-pub const RATING_OPTIONS: [&str; 10] = [
-    "1   You caused WW3!",
-    "2   Someone literally died because of you!",
-    "3   You made it worse.",
-    "4   You did nothing.",
-    "5   Barely OK but could be worse...",
-    "6   Acceptable.",
-    "7   Almost Perfect!",
-    "8   Perfect!",
-    "9   You went above and beyond to make your housemates happy!",
-    "10  You somehow cured cancer with what you did!",
+pub const RATING_OPTIONS: [&str; 5] = [
+    "1   You didn't do anything.",
+    "2   Barely noticeable.",
+    "3   Acceptable.",
+    "4   Well done.",
+    "5   Perfect!",
 ];
 
 impl Db {
