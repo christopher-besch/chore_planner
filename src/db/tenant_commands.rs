@@ -19,7 +19,7 @@ impl Db {
         }
         let sql_rows = sqlx::query(
             r#"
-SELECT Room.name, CONCAT(Tenant.name, CHAR(10), Tenant.chat_tag), TenantScoreSum.sum, TenantRatingAvg.avg
+SELECT Room.name, CONCAT(Tenant.name, CHAR(10), Tenant.chat_tag), TenantScoreSum.score, TenantRatingAvg.avg
 FROM Room
 -- Does a tenant live here currently?
 LEFT JOIN LivesIn
@@ -31,14 +31,7 @@ LEFT JOIN LivesIn
     )
 LEFT JOIN Tenant
     ON LivesIn.tenant_id = Tenant.id
--- get sum of scores for this tenant
-LEFT JOIN (
-        SELECT Tenant.id AS tenant_id, CAST(SUM(TenantScore.score) AS FLOAT) AS sum
-        FROM Tenant
-        LEFT JOIN TenantScore
-            ON Tenant.id = TenantScore.tenant_id
-        GROUP BY Tenant.id
-    ) TenantScoreSum ON TenantScoreSum.tenant_id = Tenant.id
+LEFT JOIN TenantScoreSum ON TenantScoreSum.tenant_id = Tenant.id
 -- get average rating for this tenant
 LEFT JOIN (
     SELECT Tenant.id AS tenant_id, CAST(AVG(Rating.rating) AS FLOAT) AS avg

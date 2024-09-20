@@ -124,6 +124,7 @@ CREATE TABLE Rating (
 -- week the week the tenant profited from the chore
 -- did_work 1 iff the tenant did the chore themselfes, else 0
 CREATE VIEW ProfitingTenant (tenant_id, chore_id, week, did_work) AS
+
 SELECT Tenant.id, ChoreLog.chore_id, ChoreLog.week, IIF(ChoreLog.worker = Tenant.id, 1, 0)
 FROM Tenant
 -- ensure tenant lives here in the week
@@ -148,6 +149,7 @@ WHERE ChoreExemption.chore_id IS NULL;
 -- week the week
 -- count the amount of tenants profiting from the chore being done in that week
 CREATE VIEW TotalProfitingTenant (chore_id, week, count) AS
+
 SELECT ProfitingTenant.chore_id, ProfitingTenant.week, COUNT(DISTINCT ProfitingTenant.tenant_id)
 FROM ProfitingTenant
 GROUP BY ProfitingTenant.week, ProfitingTenant.chore_id;
@@ -168,6 +170,7 @@ GROUP BY ProfitingTenant.week, ProfitingTenant.chore_id;
 -- chore_id the chore in question
 -- score the score of the tenant for that score
 CREATE VIEW TenantScore (tenant_id, chore_id, score) AS
+
 SELECT Tenant.id, Chore.id,
     COALESCE(SUM(ProfitingTenant.did_work * 1 - (1-ProfitingTenant.did_work) * 1/CAST(TotalProfitingTenant.count - 1 AS FLOAT)), 0)
 FROM Tenant, Chore
@@ -176,6 +179,16 @@ LEFT JOIN TotalProfitingTenant ON ProfitingTenant.chore_id = TotalProfitingTenan
     AND ProfitingTenant.week = TotalProfitingTenant.week
 GROUP BY Tenant.id, Chore.id
 ORDER BY Chore.id, Tenant.id;
+"#,
+            r#"
+-- get sum of scores for this tenant
+CREATE VIEW TenantScoreSUM (tenant_id, score) AS
+
+SELECT Tenant.id, CAST(SUM(TenantScore.score) AS FLOAT)
+FROM Tenant
+LEFT JOIN TenantScore
+    ON Tenant.id = TenantScore.tenant_id
+GROUP BY Tenant.id;
 "#,
         ];
 
