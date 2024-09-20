@@ -82,12 +82,17 @@ impl Db {
     /// Update the current week.
     /// Ignore the provided week when debug mode is enabled. In that case the current week is
     /// simply incremented.
-    pub fn set_week(&mut self, week: Week) {
+    ///
+    /// Return true iff the new week differs from the old
+    pub fn set_week(&mut self, week: Week) -> bool {
+        let old_week = self.week;
         if self.debug {
             self.week = Week::from_db(self.week.db_week() + 1);
         } else {
             self.week = week;
         }
+        println!("the current week is: {}", self.week);
+        old_week != self.week
     }
 
     /// Typing on mobile complicated things with auto-correcting keyboards.
