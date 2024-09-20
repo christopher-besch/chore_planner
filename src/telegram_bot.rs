@@ -162,20 +162,24 @@ impl<'a> MessagableBot for TelegramBot<'a> {
     async fn send_msg(&mut self, msg: Result<ReplyMsg>) {
         const TIME_BETWEEN_MESSAGES: Duration = Duration::from_millis(500);
 
-        let msg = msg.unwrap_or_else(|e| ReplyMsg::from_mono(&e.to_string()));
+        let msg = msg.unwrap_or_else(|e| {
+            eprintln!("sending error: {:?}", e);
+            ReplyMsg::from_mono(&e.to_string())
+        });
 
         let mut paginated_mono_msgs = Self::paginate_mono_msg(&msg.mono_msg)
             .into_iter()
             .peekable();
         while let Some(paginated_mono_msg) = paginated_mono_msgs.next() {
+            let paginated_mono_msg_trimmed = paginated_mono_msg.trim();
             // ignore empty messages
-            if paginated_mono_msg.is_empty() {
+            if paginated_mono_msg_trimmed.is_empty() {
                 continue;
             }
             if let Err(e) = <TeloxideBot as Requester>::send_message(
                 &self.bot,
                 self.chat_id,
-                code_block(&paginated_mono_msg),
+                code_block(&paginated_mono_msg_trimmed),
             )
             .parse_mode(ParseMode::MarkdownV2)
             .await
@@ -194,12 +198,16 @@ impl<'a> MessagableBot for TelegramBot<'a> {
             if let Err(e) = <TeloxideBot as Requester>::send_message(
                 &self.bot,
                 self.chat_id,
-                msg.tags.into_iter().collect::<Vec<String>>().join(" "),
+                msg.tags
+                    .clone()
+                    .into_iter()
+                    .collect::<Vec<String>>()
+                    .join(" "),
             )
             .parse_mode(ParseMode::MarkdownV2)
             .await
             {
-                eprintln!("Error sending tags: {:?}", e);
+                eprintln!("Error sending tags {:?}: {:?}", msg.tags, e);
             };
         }
     }
