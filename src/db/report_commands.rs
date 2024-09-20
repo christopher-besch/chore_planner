@@ -19,7 +19,7 @@ impl Db {
             job: String,
             worker: String,
             #[tabled(skip)]
-            tag: String,
+            tag: Option<String>,
         }
         let sql_rows = sqlx::query(
             r#"
@@ -53,7 +53,7 @@ WHERE ChoreLog.week = ?1;
                 Settings::new(Alignment::center(), Alignment::center())
             )
         ));
-        msg.tags = rows.into_iter().map(|r| r.tag).collect();
+        msg.tags = rows.into_iter().filter_map(|r| r.tag).collect();
         Ok(msg)
     }
 }
