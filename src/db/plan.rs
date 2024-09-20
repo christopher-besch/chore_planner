@@ -182,9 +182,14 @@ ORDER BY CAST(TenantScoreSum.score AS REAL) ASC;
         }
         let dist: Vec<f64> = tenants
             .into_iter()
-            .map(|(_, score)|
-                // the main affine-linear transformation
-                1.0 / n - (1.0 - self.gamma) / (n * xn) * score)
+            .map(|(_, score)| {
+                // floats are icky, don't return something slightly negative
+                f64::max(
+                    // the main affine-linear transformation
+                    1.0 / n - (1.0 - self.gamma) / (n * xn) * score,
+                    0.0,
+                )
+            })
             .collect();
 
         let sum: f64 = dist.iter().sum();
@@ -204,6 +209,7 @@ ORDER BY CAST(TenantScoreSum.score AS REAL) ASC;
         tenants: Vec<(String, f64)>,
     ) -> Result<(String, f64, f64)> {
         let dist = self.calc_tenant_distribution(tenants.clone());
+        println!("tenant Distribution: {:?}", dist);
         let idx = WeightedIndex::new(&dist)?.sample(&mut self.rng);
         Ok((tenants[idx].0.clone(), tenants[idx].1, dist[idx]))
     }
@@ -221,7 +227,9 @@ ORDER BY CAST(TenantScoreSum.score AS REAL) ASC;
     where
         F: FnOnce(&str, Week) -> String,
     {
+        println!("planning {} {}", chore, week);
         let tenants = self.get_available_tenants(week, chore).await?;
+        println!("available tenants: {:?}", tenants);
         if tenants.is_empty() {
             return Ok(ReplyMsg::new());
         }
