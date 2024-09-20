@@ -1114,12 +1114,12 @@ async fn test_get_available_tenants() {
     assert_eq!(
         out,
         vec![
-            ("Alex".to_string(), -0.75),
-            ("Bob".to_string(), -0.75),
-            ("Thomas".to_string(), 0.0),
-            ("Jonas".to_string(), 0.5),
-            ("Olli".to_string(), 0.5),
-            ("Till".to_string(), 0.5)
+            ("Alex".to_string(), -0.5833333333333333),
+            ("Bob".to_string(), -0.5833333333333333),
+            ("Thomas".to_string(), -3.700743415417188e-17),
+            ("Till".to_string(), 0.16666666666666666),
+            ("Jonas".to_string(), 0.49999999999999994),
+            ("Olli".to_string(), 0.49999999999999994)
         ]
     );
 }
@@ -1287,7 +1287,7 @@ async fn test_update_plan() {
         out.mono_msg,
         r#"# Spüldienst on 33/2024: Bob
 Bob, you have been chosen for the Spüldienst on 33/2024.
-According to your effective score -0.75 you've had a probability of 26% to be chosen.
+According to your effective score -0.58 you've had a probability of 25% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
     testing testing, Bob, 33/2024
 Alternatively you can move out and then back in if you're on vacation.
@@ -1296,7 +1296,7 @@ Alternatively you can move out and then back in if you're on vacation.
 
 # Mülldienst on 33/2024: Bob
 Bob, you have been chosen for the Mülldienst on 33/2024.
-According to your effective score 0.06 you've had a probability of 27% to be chosen.
+According to your effective score 0.44 you've had a probability of 27% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
     testing testing, Bob, 33/2024
 Alternatively you can move out and then back in if you're on vacation.
@@ -1337,72 +1337,72 @@ Take out the trash.
         out.mono_msg,
         r#"# Spüldienst on 34/2024: Olli
 Olli, you have been chosen for the Spüldienst on 34/2024.
-According to your effective score 0.30 you've had a probability of 13% to be chosen.
+According to your effective score 0.30 you've had a probability of 16% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
     testing testing, Olli, 34/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 34/2024: Alex
-Alex, you have been chosen for the Mülldienst on 34/2024.
-According to your effective score -0.25 you've had a probability of 26% to be chosen.
+# Mülldienst on 34/2024: Jonas
+Jonas, you have been chosen for the Mülldienst on 34/2024.
+According to your effective score 0.03 you've had a probability of 25% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Alex, 34/2024
+    testing testing, Jonas, 34/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
 # Spüldienst on 35/2024: Olli
 Olli, you have been chosen for the Spüldienst on 35/2024.
-According to your effective score 1.31 you've had a probability of 16% to be chosen.
+According to your effective score 1.48 you've had a probability of 16% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
     testing testing, Olli, 35/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 35/2024: Thomas
-Thomas, you have been chosen for the Mülldienst on 35/2024.
-According to your effective score -0.50 you've had a probability of 37% to be chosen.
+# Mülldienst on 35/2024: Alex
+Alex, you have been chosen for the Mülldienst on 35/2024.
+According to your effective score -1.00 you've had a probability of 38% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Thomas, 35/2024
+    testing testing, Alex, 35/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Spüldienst on 36/2024: Bob
-Bob, you have been chosen for the Spüldienst on 36/2024.
-According to your effective score -0.15 you've had a probability of 17% to be chosen.
+# Spüldienst on 36/2024: Till
+Till, you have been chosen for the Spüldienst on 36/2024.
+According to your effective score -0.43 you've had a probability of 17% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Bob, 36/2024
+    testing testing, Till, 36/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 36/2024: Thomas
-Thomas, you have been chosen for the Mülldienst on 36/2024.
-According to your effective score 0.25 you've had a probability of 22% to be chosen.
+# Mülldienst on 36/2024: Alex
+Alex, you have been chosen for the Mülldienst on 36/2024.
+According to your effective score -0.38 you've had a probability of 27% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Thomas, 36/2024
+    testing testing, Alex, 36/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Spüldienst on 37/2024: Till
-Till, you have been chosen for the Spüldienst on 37/2024.
-According to your effective score -0.30 you've had a probability of 17% to be chosen.
-If you're unhappy about that, type this to schedule someone else:
-    testing testing, Till, 37/2024
-Alternatively you can move out and then back in if you're on vacation.
-
-
-
-# Mülldienst on 37/2024: Alex
-Alex, you have been chosen for the Mülldienst on 37/2024.
-According to your effective score 0.08 you've had a probability of 25% to be chosen.
+# Spüldienst on 37/2024: Alex
+Alex, you have been chosen for the Spüldienst on 37/2024.
+According to your effective score -0.05 you've had a probability of 17% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
     testing testing, Alex, 37/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Mülldienst on 37/2024: Jonas
+Jonas, you have been chosen for the Mülldienst on 37/2024.
+According to your effective score 0.07 you've had a probability of 25% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Jonas, 37/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
@@ -1422,9 +1422,9 @@ Clean the kitchen.
 +---------+--------+--------+
 | 35/2024 |  Olli  |        |
 +---------+--------+--------+
-| 36/2024 |  Bob   |        |
+| 36/2024 |  Till  |        |
 +---------+--------+--------+
-| 37/2024 |  Till  |        |
+| 37/2024 |  Alex  |        |
 +---------+--------+--------+
 
 
@@ -1438,13 +1438,13 @@ Take out the trash.
 +---------+--------+--------+
 | 33/2024 |  Bob   |        |
 +---------+--------+--------+
-| 34/2024 |  Alex  |        |
+| 34/2024 | Jonas  |        |
 +---------+--------+--------+
-| 35/2024 | Thomas |        |
+| 35/2024 |  Alex  |        |
 +---------+--------+--------+
-| 36/2024 | Thomas |        |
+| 36/2024 |  Alex  |        |
 +---------+--------+--------+
-| 37/2024 |  Alex  |        |
+| 37/2024 | Jonas  |        |
 +---------+--------+--------+"#
     );
 }
@@ -1465,47 +1465,47 @@ async fn test_create_chore_update() {
         .unwrap();
     assert_eq!(
         out.mono_msg,
-        r#"# Clean the Furnace on 33/2024: Jonas
-Jonas, you have been chosen for the Clean the Furnace on 33/2024.
-According to your effective score 0.00 you've had a probability of 20% to be chosen.
+        r#"# Clean the Furnace on 33/2024: Till
+Till, you have been chosen for the Clean the Furnace on 33/2024.
+According to your effective score -0.17 you've had a probability of 20% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Jonas, 33/2024
+    testing testing, Till, 33/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
 # Clean the Furnace on 34/2024: Bob
 Bob, you have been chosen for the Clean the Furnace on 34/2024.
-According to your effective score -0.20 you've had a probability of 17% to be chosen.
+According to your effective score -0.92 you've had a probability of 18% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
     testing testing, Bob, 34/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Clean the Furnace on 35/2024: Thomas
-Thomas, you have been chosen for the Clean the Furnace on 35/2024.
-According to your effective score -0.24 you've had a probability of 21% to be chosen.
+# Clean the Furnace on 35/2024: Jonas
+Jonas, you have been chosen for the Clean the Furnace on 35/2024.
+According to your effective score 0.12 you've had a probability of 20% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Thomas, 35/2024
+    testing testing, Jonas, 35/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Clean the Furnace on 36/2024: Till
-Till, you have been chosen for the Clean the Furnace on 36/2024.
-According to your effective score -0.60 you've had a probability of 20% to be chosen.
+# Clean the Furnace on 36/2024: Alex
+Alex, you have been chosen for the Clean the Furnace on 36/2024.
+According to your effective score 0.02 you've had a probability of 17% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Till, 36/2024
+    testing testing, Alex, 36/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Clean the Furnace on 37/2024: Olli
-Olli, you have been chosen for the Clean the Furnace on 37/2024.
-According to your effective score -0.80 you've had a probability of 23% to be chosen.
+# Clean the Furnace on 37/2024: Bob
+Bob, you have been chosen for the Clean the Furnace on 37/2024.
+According to your effective score -0.32 you've had a probability of 18% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Olli, 37/2024
+    testing testing, Bob, 37/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
@@ -1525,9 +1525,9 @@ Clean the kitchen.
 +---------+--------+--------+
 | 35/2024 |  Olli  |        |
 +---------+--------+--------+
-| 36/2024 |  Bob   |        |
+| 36/2024 |  Till  |        |
 +---------+--------+--------+
-| 37/2024 |  Till  |        |
+| 37/2024 |  Alex  |        |
 +---------+--------+--------+
 
 
@@ -1541,13 +1541,13 @@ Take out the trash.
 +---------+--------+--------+
 | 33/2024 |  Bob   |        |
 +---------+--------+--------+
-| 34/2024 |  Alex  |        |
+| 34/2024 | Jonas  |        |
 +---------+--------+--------+
-| 35/2024 | Thomas |        |
+| 35/2024 |  Alex  |        |
 +---------+--------+--------+
-| 36/2024 | Thomas |        |
+| 36/2024 |  Alex  |        |
 +---------+--------+--------+
-| 37/2024 |  Alex  |        |
+| 37/2024 | Jonas  |        |
 +---------+--------+--------+
 
 
@@ -1559,15 +1559,15 @@ Do something with coal
 +---------+--------+--------+
 |  week   | tenant | rating |
 +---------+--------+--------+
-| 33/2024 | Jonas  |        |
+| 33/2024 |  Till  |        |
 +---------+--------+--------+
 | 34/2024 |  Bob   |        |
 +---------+--------+--------+
-| 35/2024 | Thomas |        |
+| 35/2024 | Jonas  |        |
 +---------+--------+--------+
-| 36/2024 |  Till  |        |
+| 36/2024 |  Alex  |        |
 +---------+--------+--------+
-| 37/2024 |  Olli  |        |
+| 37/2024 |  Bob   |        |
 +---------+--------+--------+"#
     );
 }
@@ -1613,18 +1613,9 @@ async fn test_exempt_update() {
 
 # Spüldienst on 33/2024: Jonas
 Jonas, you have been chosen for the Spüldienst on 33/2024.
-According to your effective score -0.62 you've had a probability of 27% to be chosen.
+According to your effective score -0.40 you've had a probability of 27% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
     testing testing, Jonas, 33/2024
-Alternatively you can move out and then back in if you're on vacation.
-
-
-
-# Spüldienst on 36/2024: Thomas
-Thomas, you have been chosen for the Spüldienst on 36/2024.
-According to your effective score -1.15 you've had a probability of 22% to be chosen.
-If you're unhappy about that, type this to schedule someone else:
-    testing testing, Thomas, 36/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
@@ -1644,9 +1635,9 @@ Clean the kitchen.
 +---------+--------+--------+
 | 35/2024 |  Olli  |        |
 +---------+--------+--------+
-| 36/2024 | Thomas |        |
+| 36/2024 |  Till  |        |
 +---------+--------+--------+
-| 37/2024 |  Till  |        |
+| 37/2024 |  Alex  |        |
 +---------+--------+--------+
 
 
@@ -1660,13 +1651,13 @@ Take out the trash.
 +---------+--------+--------+
 | 33/2024 |  Bob   |        |
 +---------+--------+--------+
-| 34/2024 |  Alex  |        |
+| 34/2024 | Jonas  |        |
 +---------+--------+--------+
-| 35/2024 | Thomas |        |
+| 35/2024 |  Alex  |        |
 +---------+--------+--------+
-| 36/2024 | Thomas |        |
+| 36/2024 |  Alex  |        |
 +---------+--------+--------+
-| 37/2024 |  Alex  |        |
+| 37/2024 | Jonas  |        |
 +---------+--------+--------+"#
     );
 }
@@ -1680,18 +1671,27 @@ async fn test_replan_update() {
         .unwrap();
 
     let out = db
-        .replan("Thomas", Week::new(36, 2024).unwrap(), |t, w| {
+        .replan("Bob", Week::new(33, 2024).unwrap(), |t, w| {
             format!("testing testing, {}, {}", t, w)
         })
         .await
         .unwrap();
     assert_eq!(
         out.mono_msg,
-        r#"# Mülldienst on 36/2024: Bob
-Bob, you have been chosen for the Mülldienst on 36/2024.
-According to your effective score 0.06 you've had a probability of 33% to be chosen.
+        r#"# Spüldienst on 33/2024: Jonas
+Jonas, you have been chosen for the Spüldienst on 33/2024.
+According to your effective score -0.18 you've had a probability of 26% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Bob, 36/2024
+    testing testing, Jonas, 33/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Mülldienst on 33/2024: Alex
+Alex, you have been chosen for the Mülldienst on 33/2024.
+According to your effective score -0.54 you've had a probability of 60% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Alex, 33/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
@@ -1705,15 +1705,15 @@ Clean the kitchen.
 +---------+--------+--------+
 |  week   | tenant | rating |
 +---------+--------+--------+
-| 33/2024 |  Bob   |        |
+| 33/2024 | Jonas  |        |
 +---------+--------+--------+
 | 34/2024 |  Olli  |        |
 +---------+--------+--------+
 | 35/2024 |  Olli  |        |
 +---------+--------+--------+
-| 36/2024 |  Bob   |        |
+| 36/2024 |  Till  |        |
 +---------+--------+--------+
-| 37/2024 |  Till  |        |
+| 37/2024 |  Alex  |        |
 +---------+--------+--------+
 
 
@@ -1725,15 +1725,15 @@ Take out the trash.
 +---------+--------+--------+
 |  week   | tenant | rating |
 +---------+--------+--------+
-| 33/2024 |  Bob   |        |
+| 33/2024 |  Alex  |        |
 +---------+--------+--------+
-| 34/2024 |  Alex  |        |
+| 34/2024 | Jonas  |        |
 +---------+--------+--------+
-| 35/2024 | Thomas |        |
+| 35/2024 |  Alex  |        |
 +---------+--------+--------+
-| 36/2024 |  Bob   |        |
+| 36/2024 |  Alex  |        |
 +---------+--------+--------+
-| 37/2024 |  Alex  |        |
+| 37/2024 | Jonas  |        |
 +---------+--------+--------+"#
     );
 }
@@ -1747,7 +1747,7 @@ async fn test_move_out_update() {
         .unwrap();
 
     let out = db
-        .move_out("Thomas", |t, w| format!("testing testing, {}, {}", t, w))
+        .move_out("Bob", |t, w| format!("testing testing, {}, {}", t, w))
         .await
         .unwrap();
     assert_eq!(
@@ -1761,13 +1761,13 @@ async fn test_move_out_update() {
 | M401 |         |       |
 |      |         |       |
 +------+---------+-------+
-| M402 |  Alex   | -1.33 |
+| M402 |  Alex   | -0.08 |
 |      |  @alex  |       |
 +------+---------+-------+
-| M403 | Jonas   | -3.25 |
+| M403 | Jonas   | -0.25 |
 |      | @jonas  | 1.00  |
 +------+---------+-------+
-| M404 |         |       |
+| M404 | Thomas  | -3.75 |
 |      |         |       |
 +------+---------+-------+
 | M405 |         |       |
@@ -1782,8 +1782,8 @@ async fn test_move_out_update() {
 | M408 |  Till   | 0.17  |
 |      |         | 7.33  |
 +------+---------+-------+
-| M409 |  Bob    | -0.33 |
-|      |  @bob   |       |
+| M409 |         |       |
+|      |         |       |
 +------+---------+-------+
 | M410 |         |       |
 |      |         |       |
@@ -1806,20 +1806,20 @@ async fn test_move_out_update() {
 
 
 
-# Mülldienst on 35/2024: Jonas
-Jonas, you have been chosen for the Mülldienst on 35/2024.
-According to your effective score -1.58 you've had a probability of 60% to be chosen.
+# Spüldienst on 33/2024: Jonas
+Jonas, you have been chosen for the Spüldienst on 33/2024.
+According to your effective score -0.40 you've had a probability of 27% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Jonas, 35/2024
+    testing testing, Jonas, 33/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 36/2024: Jonas
-Jonas, you have been chosen for the Mülldienst on 36/2024.
-According to your effective score -0.61 you've had a probability of 37% to be chosen.
+# Mülldienst on 33/2024: Alex
+Alex, you have been chosen for the Mülldienst on 33/2024.
+According to your effective score -0.54 you've had a probability of 60% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Jonas, 36/2024
+    testing testing, Alex, 33/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
@@ -1833,15 +1833,15 @@ Clean the kitchen.
 +---------+--------+--------+
 |  week   | tenant | rating |
 +---------+--------+--------+
-| 33/2024 |  Bob   |        |
+| 33/2024 | Jonas  |        |
 +---------+--------+--------+
 | 34/2024 |  Olli  |        |
 +---------+--------+--------+
 | 35/2024 |  Olli  |        |
 +---------+--------+--------+
-| 36/2024 |  Bob   |        |
+| 36/2024 |  Till  |        |
 +---------+--------+--------+
-| 37/2024 |  Till  |        |
+| 37/2024 |  Alex  |        |
 +---------+--------+--------+
 
 
@@ -1853,20 +1853,20 @@ Take out the trash.
 +---------+--------+--------+
 |  week   | tenant | rating |
 +---------+--------+--------+
-| 33/2024 |  Bob   |        |
+| 33/2024 |  Alex  |        |
 +---------+--------+--------+
-| 34/2024 |  Alex  |        |
+| 34/2024 | Jonas  |        |
 +---------+--------+--------+
-| 35/2024 | Jonas  |        |
+| 35/2024 |  Alex  |        |
 +---------+--------+--------+
-| 36/2024 | Jonas  |        |
+| 36/2024 |  Alex  |        |
 +---------+--------+--------+
-| 37/2024 |  Alex  |        |
+| 37/2024 | Jonas  |        |
 +---------+--------+--------+"#
     );
 
     let out = db
-        .move_out("Bob", |t, w| format!("testing testing, {}, {}", t, w))
+        .move_out("Jonas", |t, w| format!("testing testing, {}, {}", t, w))
         .await
         .unwrap();
     assert_eq!(
@@ -1880,13 +1880,13 @@ Take out the trash.
 | M401 |         |       |
 |      |         |       |
 +------+---------+-------+
-| M402 |  Alex   | -3.25 |
+| M402 |  Alex   | 0.08  |
 |      |  @alex  |       |
 +------+---------+-------+
-| M403 | Jonas   | -2.17 |
-|      | @jonas  | 1.00  |
+| M403 |         |       |
+|      |         |       |
 +------+---------+-------+
-| M404 |         |       |
+| M404 | Thomas  | -6.67 |
 |      |         |       |
 +------+---------+-------+
 | M405 |         |       |
@@ -1925,29 +1925,29 @@ Take out the trash.
 
 
 
-# Spüldienst on 33/2024: Alex
-Alex, you have been chosen for the Spüldienst on 33/2024.
-According to your effective score -1.94 you've had a probability of 30% to be chosen.
+# Spüldienst on 33/2024: Till
+Till, you have been chosen for the Spüldienst on 33/2024.
+According to your effective score -1.31 you've had a probability of 43% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Alex, 33/2024
+    testing testing, Till, 33/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Mülldienst on 33/2024: Jonas
-Jonas, you have been chosen for the Mülldienst on 33/2024.
-According to your effective score -0.08 you've had a probability of 60% to be chosen.
+# Mülldienst on 34/2024: Thomas
+Thomas, you have been chosen for the Mülldienst on 34/2024.
+According to your effective score -3.37 you've had a probability of 60% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Jonas, 33/2024
+    testing testing, Thomas, 34/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Spüldienst on 36/2024: Alex
-Alex, you have been chosen for the Spüldienst on 36/2024.
-According to your effective score -0.94 you've had a probability of 28% to be chosen.
+# Mülldienst on 37/2024: Thomas
+Thomas, you have been chosen for the Mülldienst on 37/2024.
+According to your effective score -2.38 you've had a probability of 60% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Alex, 36/2024
+    testing testing, Thomas, 37/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
@@ -1961,143 +1961,15 @@ Clean the kitchen.
 +---------+--------+--------+
 |  week   | tenant | rating |
 +---------+--------+--------+
-| 33/2024 |  Alex  |        |
+| 33/2024 |  Till  |        |
 +---------+--------+--------+
 | 34/2024 |  Olli  |        |
 +---------+--------+--------+
 | 35/2024 |  Olli  |        |
 +---------+--------+--------+
-| 36/2024 |  Alex  |        |
-+---------+--------+--------+
-| 37/2024 |  Till  |        |
-+---------+--------+--------+
-
-
-## Mülldienst
-Times performed: 4
-Take out the trash.
-
-### Plan
-+---------+--------+--------+
-|  week   | tenant | rating |
-+---------+--------+--------+
-| 33/2024 | Jonas  |        |
-+---------+--------+--------+
-| 34/2024 |  Alex  |        |
-+---------+--------+--------+
-| 35/2024 | Jonas  |        |
-+---------+--------+--------+
-| 36/2024 | Jonas  |        |
+| 36/2024 |  Till  |        |
 +---------+--------+--------+
 | 37/2024 |  Alex  |        |
-+---------+--------+--------+"#
-    );
-
-    let out = db
-        .move_out("Jonas", |t, w| format!("testing testing, {}, {}", t, w))
-        .await
-        .unwrap();
-    assert_eq!(
-        out.mono_msg,
-        r#"# Tenants
-
-+------+---------+-------+
-| room | tenant  | score |
-|      |         | eval  |
-+------+---------+-------+
-| M401 |         |       |
-|      |         |       |
-+------+---------+-------+
-| M402 |  Alex   | -0.08 |
-|      |  @alex  |       |
-+------+---------+-------+
-| M403 |         |       |
-|      |         |       |
-+------+---------+-------+
-| M404 |         |       |
-|      |         |       |
-+------+---------+-------+
-| M405 |         |       |
-|      |         |       |
-+------+---------+-------+
-| M406 |         |       |
-|      |         |       |
-+------+---------+-------+
-| M407 | Olli    | 1.00  |
-|      | @olli69 | 4.00  |
-+------+---------+-------+
-| M408 |  Till   | -0.83 |
-|      |         | 7.33  |
-+------+---------+-------+
-| M409 |         |       |
-|      |         |       |
-+------+---------+-------+
-| M410 |         |       |
-|      |         |       |
-+------+---------+-------+
-| M411 |         |       |
-|      |         |       |
-+------+---------+-------+
-| M412 |         |       |
-|      |         |       |
-+------+---------+-------+
-| M413 |         |       |
-|      |         |       |
-+------+---------+-------+
-| M414 |         |       |
-|      |         |       |
-+------+---------+-------+
-| M415 |         |       |
-|      |         |       |
-+------+---------+-------+
-
-
-
-# Mülldienst on 33/2024: Alex
-Alex, you have been chosen for the Mülldienst on 33/2024.
-According to your effective score 0.00 you've had a probability of 100% to be chosen.
-If you're unhappy about that, type this to schedule someone else:
-    testing testing, Alex, 33/2024
-Alternatively you can move out and then back in if you're on vacation.
-
-
-
-# Mülldienst on 35/2024: Alex
-Alex, you have been chosen for the Mülldienst on 35/2024.
-According to your effective score 0.00 you've had a probability of 100% to be chosen.
-If you're unhappy about that, type this to schedule someone else:
-    testing testing, Alex, 35/2024
-Alternatively you can move out and then back in if you're on vacation.
-
-
-
-# Mülldienst on 36/2024: Alex
-Alex, you have been chosen for the Mülldienst on 36/2024.
-According to your effective score 0.00 you've had a probability of 100% to be chosen.
-If you're unhappy about that, type this to schedule someone else:
-    testing testing, Alex, 36/2024
-Alternatively you can move out and then back in if you're on vacation.
-
-
-
-# Chores
-## Spüldienst
-Times performed: 4
-Clean the kitchen.
-
-### Plan
-+---------+--------+--------+
-|  week   | tenant | rating |
-+---------+--------+--------+
-| 33/2024 |  Alex  |        |
-+---------+--------+--------+
-| 34/2024 |  Olli  |        |
-+---------+--------+--------+
-| 35/2024 |  Olli  |        |
-+---------+--------+--------+
-| 36/2024 |  Alex  |        |
-+---------+--------+--------+
-| 37/2024 |  Till  |        |
 +---------+--------+--------+
 
 
@@ -2111,13 +1983,13 @@ Take out the trash.
 +---------+--------+--------+
 | 33/2024 |  Alex  |        |
 +---------+--------+--------+
-| 34/2024 |  Alex  |        |
+| 34/2024 | Thomas |        |
 +---------+--------+--------+
 | 35/2024 |  Alex  |        |
 +---------+--------+--------+
 | 36/2024 |  Alex  |        |
 +---------+--------+--------+
-| 37/2024 |  Alex  |        |
+| 37/2024 | Thomas |        |
 +---------+--------+--------+"#
     );
 
@@ -2142,7 +2014,7 @@ Take out the trash.
 | M403 |         |       |
 |      |         |       |
 +------+---------+-------+
-| M404 |         |       |
+| M404 | Thomas  | -2.50 |
 |      |         |       |
 +------+---------+-------+
 | M405 |         |       |
@@ -2151,10 +2023,10 @@ Take out the trash.
 | M406 |         |       |
 |      |         |       |
 +------+---------+-------+
-| M407 | Olli    | -0.50 |
+| M407 | Olli    | 1.00  |
 |      | @olli69 | 4.00  |
 +------+---------+-------+
-| M408 |  Till   | -2.83 |
+| M408 |  Till   | 0.67  |
 |      |         | 7.33  |
 +------+---------+-------+
 | M409 |         |       |
@@ -2181,20 +2053,29 @@ Take out the trash.
 
 
 
-# Spüldienst on 33/2024: Till
-Till, you have been chosen for the Spüldienst on 33/2024.
-According to your effective score -1.00 you've had a probability of 60% to be chosen.
+# Mülldienst on 35/2024: Thomas
+Thomas, you have been chosen for the Mülldienst on 35/2024.
+According to your effective score 0.00 you've had a probability of 100% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Till, 33/2024
+    testing testing, Thomas, 35/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
 
-# Spüldienst on 36/2024: Olli
-Olli, you have been chosen for the Spüldienst on 36/2024.
-According to your effective score 0.00 you've had a probability of 50% to be chosen.
+# Mülldienst on 36/2024: Thomas
+Thomas, you have been chosen for the Mülldienst on 36/2024.
+According to your effective score 0.00 you've had a probability of 100% to be chosen.
 If you're unhappy about that, type this to schedule someone else:
-    testing testing, Olli, 36/2024
+    testing testing, Thomas, 36/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Spüldienst on 37/2024: Till
+Till, you have been chosen for the Spüldienst on 37/2024.
+According to your effective score 0.94 you've had a probability of 28% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Till, 37/2024
 Alternatively you can move out and then back in if you're on vacation.
 
 
@@ -2214,7 +2095,241 @@ Clean the kitchen.
 +---------+--------+--------+
 | 35/2024 |  Olli  |        |
 +---------+--------+--------+
-| 36/2024 |  Olli  |        |
+| 36/2024 |  Till  |        |
++---------+--------+--------+
+| 37/2024 |  Till  |        |
++---------+--------+--------+
+
+
+## Mülldienst
+Times performed: 3
+Take out the trash.
+
+### Plan
++---------+--------+--------+
+|  week   | tenant | rating |
++---------+--------+--------+
+| 34/2024 | Thomas |        |
++---------+--------+--------+
+| 35/2024 | Thomas |        |
++---------+--------+--------+
+| 36/2024 | Thomas |        |
++---------+--------+--------+
+| 37/2024 | Thomas |        |
++---------+--------+--------+"#
+    );
+
+    let out = db
+        .move_out("Olli", |t, w| format!("testing testing, {}, {}", t, w))
+        .await
+        .unwrap();
+    assert_eq!(
+        out.mono_msg,
+        r#"# Tenants
+
++------+--------+-------+
+| room | tenant | score |
+|      |        | eval  |
++------+--------+-------+
+| M401 |        |       |
+|      |        |       |
++------+--------+-------+
+| M402 |        |       |
+|      |        |       |
++------+--------+-------+
+| M403 |        |       |
+|      |        |       |
++------+--------+-------+
+| M404 | Thomas | -5.00 |
+|      |        |       |
++------+--------+-------+
+| M405 |        |       |
+|      |        |       |
++------+--------+-------+
+| M406 |        |       |
+|      |        |       |
++------+--------+-------+
+| M407 |        |       |
+|      |        |       |
++------+--------+-------+
+| M408 |  Till  | 1.17  |
+|      |        | 7.33  |
++------+--------+-------+
+| M409 |        |       |
+|      |        |       |
++------+--------+-------+
+| M410 |        |       |
+|      |        |       |
++------+--------+-------+
+| M411 |        |       |
+|      |        |       |
++------+--------+-------+
+| M412 |        |       |
+|      |        |       |
++------+--------+-------+
+| M413 |        |       |
+|      |        |       |
++------+--------+-------+
+| M414 |        |       |
+|      |        |       |
++------+--------+-------+
+| M415 |        |       |
+|      |        |       |
++------+--------+-------+
+
+
+
+# Spüldienst on 34/2024: Thomas
+Thomas, you have been chosen for the Spüldienst on 34/2024.
+According to your effective score -3.08 you've had a probability of 60% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Thomas, 34/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Spüldienst on 35/2024: Thomas
+Thomas, you have been chosen for the Spüldienst on 35/2024.
+According to your effective score -2.08 you've had a probability of 60% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Thomas, 35/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Chores
+## Spüldienst
+Times performed: 4
+Clean the kitchen.
+
+### Plan
++---------+--------+--------+
+|  week   | tenant | rating |
++---------+--------+--------+
+| 33/2024 |  Till  |        |
++---------+--------+--------+
+| 34/2024 | Thomas |        |
++---------+--------+--------+
+| 35/2024 | Thomas |        |
++---------+--------+--------+
+| 36/2024 |  Till  |        |
++---------+--------+--------+
+| 37/2024 |  Till  |        |
++---------+--------+--------+
+
+
+## Mülldienst
+Times performed: 3
+Take out the trash.
+
+### Plan
++---------+--------+--------+
+|  week   | tenant | rating |
++---------+--------+--------+
+| 34/2024 | Thomas |        |
++---------+--------+--------+
+| 35/2024 | Thomas |        |
++---------+--------+--------+
+| 36/2024 | Thomas |        |
++---------+--------+--------+
+| 37/2024 | Thomas |        |
++---------+--------+--------+"#
+    );
+
+    let out = db
+        .move_out("Thomas", |t, w| format!("testing testing, {}, {}", t, w))
+        .await
+        .unwrap();
+    assert_eq!(
+        out.mono_msg,
+        r#"# Tenants
+
++------+--------+-------+
+| room | tenant | score |
+|      |        | eval  |
++------+--------+-------+
+| M401 |        |       |
+|      |        |       |
++------+--------+-------+
+| M402 |        |       |
+|      |        |       |
++------+--------+-------+
+| M403 |        |       |
+|      |        |       |
++------+--------+-------+
+| M404 |        |       |
+|      |        |       |
++------+--------+-------+
+| M405 |        |       |
+|      |        |       |
++------+--------+-------+
+| M406 |        |       |
+|      |        |       |
++------+--------+-------+
+| M407 |        |       |
+|      |        |       |
++------+--------+-------+
+| M408 |  Till  | 0.17  |
+|      |        | 7.33  |
++------+--------+-------+
+| M409 |        |       |
+|      |        |       |
++------+--------+-------+
+| M410 |        |       |
+|      |        |       |
++------+--------+-------+
+| M411 |        |       |
+|      |        |       |
++------+--------+-------+
+| M412 |        |       |
+|      |        |       |
++------+--------+-------+
+| M413 |        |       |
+|      |        |       |
++------+--------+-------+
+| M414 |        |       |
+|      |        |       |
++------+--------+-------+
+| M415 |        |       |
+|      |        |       |
++------+--------+-------+
+
+
+
+# Spüldienst on 34/2024: Till
+Till, you have been chosen for the Spüldienst on 34/2024.
+According to your effective score 0.00 you've had a probability of 100% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Till, 34/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Spüldienst on 35/2024: Till
+Till, you have been chosen for the Spüldienst on 35/2024.
+According to your effective score 0.00 you've had a probability of 100% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Till, 35/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Chores
+## Spüldienst
+Times performed: 4
+Clean the kitchen.
+
+### Plan
++---------+--------+--------+
+|  week   | tenant | rating |
++---------+--------+--------+
+| 33/2024 |  Till  |        |
++---------+--------+--------+
+| 34/2024 |  Till  |        |
++---------+--------+--------+
+| 35/2024 |  Till  |        |
++---------+--------+--------+
+| 36/2024 |  Till  |        |
 +---------+--------+--------+
 | 37/2024 |  Till  |        |
 +---------+--------+--------+
