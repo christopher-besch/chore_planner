@@ -22,6 +22,12 @@ services:
             #
             # See the mathematical proof in the repo.
             CHORE_PLANNER_GAMMA: 0.1
+            # Should the chore_planner boot up with the last week or the current week.
+            # Start with the current week if false.
+            # Start with the last week if true.
+            # This can be used to bootstrap the initial plan.
+            # For that set this to true and send the container a SIGHUP straight away.
+            CHORE_PLANNER_START_WITH_LAST_WEEK: false
             # the token of the telegram bot
             TELEGRAM_BOT_TOKEN: $TELEGRAM_BOT_TOKEN
             # the id of the chat the bot should listen on
