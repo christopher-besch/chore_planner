@@ -179,7 +179,7 @@ impl<'a> MessagableBot for TelegramBot<'a> {
             if let Err(e) = <TeloxideBot as Requester>::send_message(
                 &self.bot,
                 self.chat_id,
-                code_block(&paginated_mono_msg_trimmed),
+                code_block(paginated_mono_msg_trimmed),
             )
             .parse_mode(ParseMode::MarkdownV2)
             .await
