@@ -10,7 +10,7 @@ services:
             CHORE_PLANNER_DB_PATH: /var/run/data/chore_planner.sqlite
             # This advances the current week to the next every time the weekly action is performed.
             # set to true for actual deployment
-            CHORE_PLANNER_DEBUG: true
+            CHORE_PLANNER_DEBUG: false
             # how many weeks to plan into the future
             CHORE_PLANNER_WEEKS_TO_PLAN: 5
             # probability distribution parameter between in [0, 1]
@@ -20,8 +20,8 @@ services:
             #   same score).
             # 1 results in all tenants having the same probability regardless of their score.
             #
-            # See the mathematical proof in the repo.
-            CHORE_PLANNER_GAMMA: 0.1
+            # See the mathematical proof in docs/probability_distribution.pdf in the repo
+            CHORE_PLANNER_GAMMA: 0.0
             # Should the chore_planner boot up with the last week or the current week.
             # Start with the current week if false.
             # Start with the last week if true.
@@ -33,7 +33,7 @@ services:
             # the id of the chat the bot should listen on
             TELEGRAM_CHAT_ID: $TELEGRAM_CHAT_ID
             # When should the weekly action be performed?
-            CRON_TIME: "* * * * *"
+            CRON_TIME: "0,30 6 * * *"
 
         restart: "unless-stopped"
 
