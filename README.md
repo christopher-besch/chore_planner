@@ -9,7 +9,7 @@ Simply add it to your group chat to have an
 
 way of handling your chores.
 
-The chore_planner also supports complex chore and exemption structures **fairly** assigning tenants in a way you can **trust**.
+The chore_planner supports complex chore and exemption structures **fairly** assigning tenants in a way you can **trust**.
 
 # Weekly Action
 https://github.com/user-attachments/assets/e46e64ad-d43b-473f-8171-3fdebad0fc38
