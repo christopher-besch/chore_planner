@@ -204,7 +204,6 @@ impl<'a> MessagableBot for TelegramBot<'a> {
                     .collect::<Vec<String>>()
                     .join(" "),
             )
-            .parse_mode(ParseMode::MarkdownV2)
             .await
             {
                 eprintln!("Error sending tags {:?}: {:?}", msg.tags, e);
