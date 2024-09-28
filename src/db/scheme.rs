@@ -6,6 +6,8 @@ use sqlx::Row;
 impl Db {
     /// Migrate the database from an old version to the current scheme.
     pub async fn migrate(&mut self) -> Result<()> {
+        // only ever append to this list
+        // comments to existing entries are the only exception
         let migrations = vec![
             r#"
 CREATE TABLE Room (
@@ -190,6 +192,7 @@ LEFT JOIN TenantScore
     ON Tenant.id = TenantScore.tenant_id
 GROUP BY Tenant.id;
 "#,
+            // v0.2.1 //
         ];
 
         let mut next_migration = self.get_user_version().await?;
@@ -200,6 +203,7 @@ GROUP BY Tenant.id;
             next_migration += 1;
             self.set_user_version(next_migration).await?;
         }
+        self.integrity_check().await?;
         println!("migration done");
         Ok(())
     }
@@ -237,14 +241,14 @@ GROUP BY Tenant.id;
             r#"
 SELECT *
 FROM LivesIn
-WHERE LivesIn.move_out_week IS NOT NULL AND LivesIn.move_out_week < LivesIn.move_in_week;
+WHERE LivesIn.move_out_week IS NOT NULL AND LivesIn.move_out_week <= LivesIn.move_in_week;
 "#,
         )
         .fetch_all(&mut self.con)
         .await?
         .is_empty()
         {
-            bail!("move out date is before move in date");
+            bail!("move out date is before or same as move in date");
         }
 
         if !sqlx::query(

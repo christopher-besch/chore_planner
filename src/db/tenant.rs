@@ -74,4 +74,32 @@ WHERE Tenant.name = ?1;
             _ => bail!("get_tenant_id returned more than one row"),
         }
     }
+
+    /// When you move someone out the week they moved in, the LivesIn tuple needs to be deleted
+    /// completely.
+    /// This function does that and returns true iff a LivesIn tuple with this week's move in date
+    /// existed and was deleted.
+    pub async fn undo_move_in(&mut self, tenant: &str, room: &str) -> Result<bool> {
+        let affected_rows = sqlx::query(
+            r#"
+DELETE
+FROM LivesIn
+WHERE LivesIn.tenant_id = (SELECT Tenant.id FROM Tenant WHERE Tenant.name = ?1)
+AND LivesIn.room_name = ?2
+And LivesIn.move_in_week = ?3;
+"#,
+        )
+        .bind(tenant)
+        .bind(room)
+        .bind(self.week.db_week())
+        .execute(&mut self.con)
+        .await?
+        .rows_affected();
+        self.integrity_check().await?;
+        match affected_rows {
+            0 => Ok(false),
+            1 => Ok(true),
+            _ => bail!("undo_move_in adjusted more than one row"),
+        }
+    }
 }
