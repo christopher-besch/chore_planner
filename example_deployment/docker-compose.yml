@@ -22,12 +22,14 @@ services:
             #
             # See the mathematical proof in docs/probability_distribution.pdf in the repo
             CHORE_PLANNER_GAMMA: 0.0
-            # Should the chore_planner boot up with the last week or the current week.
-            # Start with the current week if false.
-            # Start with the last week if true.
-            # This can be used to bootstrap the initial plan.
-            # For that set this to true and send the container a SIGHUP straight away.
-            CHORE_PLANNER_START_WITH_LAST_WEEK: false
+            # When the chore_planner never ran befor or was upgraded to v1.0.0 the chore_planner doesn't know when it ran last.
+            # The fallback week is used in this case.
+            # When this is true, the last week is used.
+            #     This means the chore_planner prints out the weekly message at the first weekly action (i.e., the first SIGHUP), which is what you want.
+            # When this is false, the current week is used.
+            #     This means the chore_planner only advances the current week at the start of the next week. This should only be used when you upgraded the chore_planner to v1.0.0
+            #     and the weekly message for the current week has already been sent.
+            CHORE_PLANNER_FALLBACK_TO_LAST_WEEK: true
             # the token of the telegram bot
             TELEGRAM_BOT_TOKEN: $TELEGRAM_BOT_TOKEN
             # the id of the chat the bot should listen on

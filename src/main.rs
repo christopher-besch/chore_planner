@@ -35,19 +35,19 @@ async fn run_loop<T: MessagableBot + PollableBot>(mut bot: T) {
         .unwrap();
     let db_path = env::var("CHORE_PLANNER_DB_PATH")
         .expect("the environment variable CHORE_PLANNER_DB_PATH must be provided");
-    let start_with_last_week = env::var("CHORE_PLANNER_START_WITH_LAST_WEEK")
-        .expect("the environment variable CHORE_PLANNER_START_WITH_LAST_WEEK must be provided")
+    let fallback_to_last_week = env::var("CHORE_PLANNER_FALLBACK_TO_LAST_WEEK")
+        .expect("the environment variable CHORE_PLANNER_FALLBACK_TO_LAST_WEEK must be provided")
         .parse::<bool>()
-        .context("failed to convert CHORE_PLANNER_START_WITH_LAST_WEEK to bool")
+        .context("failed to convert CHORE_PLANNER_FALLBACK_TO_LAST_WEEK to bool")
         .unwrap();
 
-    let mut start_week = Week::from(Local::now().date_naive());
-    if start_with_last_week {
-        start_week = Week::from_db(start_week.db_week() - 1);
+    let mut fallback_week = Week::from(Local::now().date_naive());
+    if fallback_to_last_week {
+        fallback_week = Week::from_db(fallback_week.db_week() - 1);
     }
     let mut db = Db::new(
         &format!("sqlite://{}", db_path),
-        start_week,
+        fallback_week,
         weeks_to_plan,
         gamma,
         rand::random::<u64>(),

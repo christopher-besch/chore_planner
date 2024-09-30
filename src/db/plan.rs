@@ -15,7 +15,7 @@ JOIN Tenant ON Tenant.id = ChoreLog.worker
 WHERE ChoreLog.week >= ?1;
 "#,
         )
-        .bind(self.week.db_week())
+        .bind(self.get_week_internal().await.db_week())
         .fetch_all(&mut self.con)
         .await?;
         self.integrity_check().await?;
@@ -61,7 +61,7 @@ AND ChoreLog.week = ?2;
     pub async fn get_weeks_to_plan(&mut self) -> Result<Vec<(Week, String)>> {
         let mut weeks_to_plan = Vec::<(Week, String)>::new();
         for i in 0..self.weeks_to_plan {
-            let check_week = Week::from_db(self.week.db_week() + i as i64);
+            let check_week = Week::from_db(self.get_week_internal().await.db_week() + i as i64);
             let sql_rows = sqlx::query(
                 r#"
 SELECT Chore.name
@@ -271,7 +271,7 @@ INSERT INTO ChoreLog VALUES
             bail!("affected {} rows", affected_rows);
         }
 
-        let week_delta = week.db_week() - self.week.db_week();
+        let week_delta = week.db_week() - self.get_week_internal().await.db_week();
         let mut msg = ReplyMsg::from_mono(&format!(
             "# {1} on {2} (in {6} {7}): {0}
 {0}, you have been chosen for the {1} on {2}.

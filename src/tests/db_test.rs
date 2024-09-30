@@ -105,7 +105,9 @@ async fn test_bot_polling() {
         .await
         .unwrap();
 
-    db.week = Week::from_db(db.week.db_week() + 1);
+    let cur_week = db.get_week_internal().await;
+    db.set_week_internal(Week::from_db(cur_week.db_week() + 1))
+        .await;
     db.create_rating_polls(&mut bot).await.unwrap();
     // The second invocation shouldn't do anything.
     db.create_rating_polls(&mut bot).await.unwrap();
@@ -1222,7 +1224,7 @@ async fn test_grant_exemptions() {
     }
 
     // can't add again even next week
-    db.set_week(Week::new(34, 2024).unwrap());
+    db.set_week(Week::new(34, 2024).unwrap()).await;
     let res = db
         .grant_exemption("God", "Chris", |t, w| {
             format!("testing testing, {}, {}", t, w)
@@ -1273,7 +1275,7 @@ async fn test_revoke_exemptions() {
     }
 
     // can't revoke again even next week
-    db.set_week(Week::new(34, 2024).unwrap());
+    db.set_week(Week::new(34, 2024).unwrap()).await;
     let res = db
         .revoke_exemption("Bestandsminister", "Chris", |t, w| {
             format!("testing testing, {}, {}", t, w)
@@ -2552,6 +2554,14 @@ We have another week and new jobs to go with it:
 
 Have a very safe and productive week."#
     );
+}
+
+#[tokio::test]
+async fn test_update_current_week() {
+    let mut db = prepare_db().await;
+    assert_eq!(db.get_week_internal().await, Week::new(33, 2024).unwrap());
+    db.set_week_internal(Week::new(35, 2024).unwrap()).await;
+    assert_eq!(db.get_week_internal().await, Week::new(35, 2024).unwrap());
 }
 
 async fn prepare_db() -> Db {

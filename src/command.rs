@@ -285,7 +285,7 @@ where
 /// happens. An exception to this is the database's debug mode.
 pub async fn weekly_action<B: MessagableBot + PollableBot>(db: &mut Db, bot: &mut B) {
     println!("thanks for the SIGHUP; performing weekly action");
-    let week_changed = db.set_week(Week::from(Local::now().date_naive()));
+    let week_changed = db.set_week(Week::from(Local::now().date_naive())).await;
     if !week_changed {
         println!("the current week didn't change");
         return;

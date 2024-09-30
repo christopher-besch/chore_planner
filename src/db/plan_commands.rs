@@ -40,7 +40,11 @@ REPLACE INTO Unwilling VALUES (
     }
 
     /// List all future ChoreLogs.
+    ///
+    /// Or list all past ChoreLogs starting from start_week when start_week is Some.
     pub async fn list_plan(&mut self, start_week: Option<Week>) -> Result<ReplyMsg> {
+        let cur_week = self.get_week_internal().await;
+
         struct Chore {
             id: i32,
             name: String,
@@ -59,7 +63,7 @@ GROUP BY Chore.id, Chore.name, Chore.description, Chore.active
 ORDER BY Chore.id;
 "#,
         )
-        .bind(self.week.db_week())
+        .bind(cur_week.db_week())
         .fetch_all(&mut self.con)
         .await?;
         self.integrity_check().await?;
@@ -102,9 +106,9 @@ GROUP BY ChoreLog.week, ChoreLog.chore_id, Tenant.name
 ORDER BY ChoreLog.week;
 "#,
             )
-            .bind(start_week.unwrap_or(self.week).db_week())
+            .bind(start_week.unwrap_or(cur_week).db_week())
             // set after_last_week when a start date is set
-            .bind(start_week.map(|_| self.week.db_week()))
+            .bind(start_week.map(|_| cur_week.db_week()))
             .bind(chore.id)
             .fetch_all(&mut self.con)
             .await?;

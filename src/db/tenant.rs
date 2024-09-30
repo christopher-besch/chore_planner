@@ -17,7 +17,7 @@ JOIN Tenant ON LivesIn.tenant_id = Tenant.id
 WHERE Room.name = ?2;
 "#,
         )
-        .bind(self.week.db_week())
+        .bind(self.get_week_internal().await.db_week())
         .bind(room)
         .fetch_all(&mut self.con)
         .await?;
@@ -43,7 +43,7 @@ JOIN Room ON LivesIn.room_name = Room.name
 WHERE Tenant.name = ?2;
 "#,
         )
-        .bind(self.week.db_week())
+        .bind(self.get_week_internal().await.db_week())
         .bind(name)
         .fetch_all(&mut self.con)
         .await?;
@@ -91,7 +91,7 @@ And LivesIn.move_in_week = ?3;
         )
         .bind(tenant)
         .bind(room)
-        .bind(self.week.db_week())
+        .bind(self.get_week_internal().await.db_week())
         .execute(&mut self.con)
         .await?
         .rows_affected();

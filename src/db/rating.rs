@@ -15,7 +15,7 @@ impl Db {
     ///
     /// The poll is only created once. Any subsequent calls are being ignored.
     pub async fn create_rating_polls<T: PollableBot>(&mut self, bot: &mut T) -> Result<()> {
-        let week = Week::from_db(self.week.db_week() - 1);
+        let week = Week::from_db(self.get_week_internal().await.db_week() - 1);
         let rows = sqlx::query(
             r#"
 SELECT Chore.name, Tenant.name
@@ -78,7 +78,7 @@ FROM ChoreLog
     AND ChoreLog.week < ?1;
 "#,
         )
-        .bind(self.week.db_week())
+        .bind(self.get_week_internal().await.db_week())
         .fetch_all(&mut self.con)
         .await?;
         self.integrity_check().await?;

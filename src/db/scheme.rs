@@ -193,6 +193,18 @@ LEFT JOIN TenantScore
 GROUP BY Tenant.id;
 "#,
             // v0.2.1 //
+            r#"
+-- used for global variables with permanent storage
+-- keys:
+-- current_week
+CREATE TABLE KeyValue (
+    key TEXT NOT NULL,
+    value TEXT,
+    --
+    CONSTRAINT KeyValue_PK PRIMARY KEY (key)
+) STRICT;
+"#,
+            // v1.0.0 //
         ];
 
         let mut next_migration = self.get_user_version().await?;

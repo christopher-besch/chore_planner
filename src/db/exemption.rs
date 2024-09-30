@@ -28,7 +28,7 @@ FROM TenantExemption
         )
         .bind(tenant)
         .bind(reason)
-        .bind(self.week.db_week())
+        .bind(self.get_week_internal().await.db_week())
         .fetch_all(&mut self.con)
         .await?;
         self.integrity_check().await?;

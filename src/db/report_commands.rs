@@ -30,7 +30,7 @@ JOIN Chore ON ChoreLog.chore_id = Chore.id
 WHERE ChoreLog.week = ?1;
 "#,
         )
-        .bind(self.week.db_week())
+        .bind(self.get_week_internal().await.db_week())
         .fetch_all(&mut self.con)
         .await?;
         self.integrity_check().await?;
@@ -47,7 +47,7 @@ WHERE ChoreLog.week = ?1;
 
         let mut msg = ReplyMsg::from_mono(&format!(
             "# Week {}\nHello smart people!\nWe have another week and new jobs to go with it:\n\n{}\n\nHave a very safe and productive week.",
-            self.week,
+            self.get_week_internal().await,
             Table::new(&rows).modify(
                 Segment::all(),
                 Settings::new(Alignment::center(), Alignment::center())

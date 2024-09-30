@@ -46,7 +46,7 @@ LEFT JOIN (
 ORDER BY Room.name ASC;
 "#,
         )
-        .bind(self.week.db_week())
+        .bind(self.get_week_internal().await.db_week())
         .fetch_all(&mut self.con)
         .await?;
         self.integrity_check().await?;
@@ -152,7 +152,7 @@ INSERT INTO LivesIn VALUES
         )
         .bind(tenant)
         .bind(room)
-        .bind(self.week.db_week())
+        .bind(self.get_week_internal().await.db_week())
         .execute(&mut self.con)
         .await?;
         self.integrity_check().await?;
@@ -180,7 +180,7 @@ SET move_out_week = ?1
     AND (LivesIn.move_out_week IS NULL OR LivesIn.move_out_week > ?1);
 "#,
             )
-            .bind(self.week.db_week())
+            .bind(self.get_week_internal().await.db_week())
             .bind(tenant)
             .execute(&mut self.con)
             .await?

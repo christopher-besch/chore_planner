@@ -26,6 +26,9 @@ And here is what you need to do once the bot is [running on your server](#deploy
 The entire administration can be performed from the comfort of your chat.
 Send `@name_of_your_bot --help` for an overview over all commands.
 
+Once you have performed this administration send the chore_planner a manual SIGHUP with `docker kill -s HUP NameOfContainer`.
+This sends the first weekly message announcing who needs to do what in the first week.
+
 There are more things you can change that aren't implemented in the chat administration yet.
 You can perform those directly on the SQLite Database using the [SQLiteBrowser](https://sqlitebrowser.org) or similar tools.
 When the chore_planner boots up it checks the database integrity and explains if your changes have broken something.

@@ -38,7 +38,7 @@ LEFT JOIN (
 ) Tenants ON Tenants.exemption_reason_id = ExemptionReason.id;
 "#,
         )
-        .bind(self.week.db_week())
+        .bind(self.get_week_internal().await.db_week())
         .fetch_all(&mut self.con)
         .await?;
         self.integrity_check().await?;
@@ -205,7 +205,7 @@ INSERT INTO TenantExemption VALUES
         )
         .bind(tenant)
         .bind(reason)
-        .bind(self.week.db_week())
+        .bind(self.get_week_internal().await.db_week())
         .execute(&mut self.con)
         .await?
         .rows_affected();
@@ -251,7 +251,7 @@ SET end_week = ?1
     AND (TenantExemption.end_week IS NULL OR TenantExemption.end_week > ?1);
 "#,
         )
-        .bind(self.week.db_week())
+        .bind(self.get_week_internal().await.db_week())
         .bind(tenant)
         .bind(reason)
         .execute(&mut self.con)

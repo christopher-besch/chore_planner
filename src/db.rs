@@ -1,5 +1,6 @@
 // backend helper functions
 mod exemption;
+mod key_value;
 mod plan;
 mod scheme;
 mod tenant;
@@ -27,8 +28,9 @@ mod db_test;
 /// The entire state is stored here, therefore restarting the application is fine.
 pub struct Db {
     con: SqliteConnection,
-    // don't get the actual current time when needed to enable easier testing
-    week: Week,
+    /// When the current_week global variable hasn't been set, this is used instead.
+    /// The global variable is set at the first weekly action.
+    fallback_week: Week,
     /// how many weeks to plan ahead and thus create ChoreLogs for
     weeks_to_plan: u32,
     /// probability distribution parameter between in [0, 1]
@@ -50,7 +52,7 @@ impl Db {
     /// When the debug mode is on, advance to the next week every time the week is updated.
     pub async fn new(
         path: &str,
-        cur_week: Week,
+        fallback_week: Week,
         weeks_to_plan: u32,
         gamma: f64,
         seed: u64,
@@ -68,7 +70,7 @@ impl Db {
                 .create_if_missing(true)
                 .connect()
                 .await?,
-            week: cur_week,
+            fallback_week,
             weeks_to_plan,
             gamma,
             rng: StdRng::seed_from_u64(seed),
@@ -84,15 +86,17 @@ impl Db {
     /// simply incremented.
     ///
     /// Return true iff the new week differs from the old
-    pub fn set_week(&mut self, week: Week) -> bool {
-        let old_week = self.week;
+    pub async fn set_week(&mut self, week: Week) -> bool {
+        let old_week = self.get_week_internal().await;
         if self.debug {
-            self.week = Week::from_db(self.week.db_week() + 1);
+            self.set_week_internal(Week::from_db(old_week.db_week() + 1))
+                .await;
         } else {
-            self.week = week;
+            self.set_week_internal(week).await;
         }
-        println!("the current week is: {}", self.week);
-        old_week != self.week
+        let new_week = self.get_week_internal().await;
+        println!("the current week is: {}", new_week);
+        old_week != new_week
     }
 
     /// Typing on mobile complicated things with auto-correcting keyboards.
