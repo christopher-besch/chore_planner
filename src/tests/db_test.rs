@@ -1289,8 +1289,9 @@ async fn test_revoke_exemptions() {
 }
 
 #[tokio::test]
-async fn test_get_available_tenants() {
+async fn test_get_all_available_tenants() {
     let mut db = prepare_db().await;
+    db.try_exclude_busy_tenants = false;
     let out = db
         .get_available_tenants(Week::new(34, 2024).unwrap(), "Spüldienst")
         .await
@@ -1306,6 +1307,175 @@ async fn test_get_available_tenants() {
             ("Olli".to_string(), 0.49999999999999994)
         ]
     );
+}
+
+#[tokio::test]
+async fn test_get_available_tenants() {
+    let mut db = prepare_db().await;
+    db.try_exclude_busy_tenants = true;
+    db.weeks_to_plan = 5;
+    let out = db
+        .get_available_tenants(Week::new(34, 2024).unwrap(), "Spüldienst")
+        .await
+        .unwrap();
+    assert_eq!(
+        out,
+        vec![
+            ("Alex".to_string(), -0.5833333333333333),
+            ("Bob".to_string(), -0.5833333333333333),
+            ("Thomas".to_string(), -3.700743415417188e-17),
+            ("Till".to_string(), 0.16666666666666666),
+            ("Jonas".to_string(), 0.49999999999999994),
+            ("Olli".to_string(), 0.49999999999999994)
+        ]
+    );
+    let out = db
+        .update_plan(|t, w| format!("testing testing, {}, {}", t, w))
+        .await
+        .unwrap();
+    assert_eq!(
+        out.mono_msg,
+        r#"# Spüldienst on 33/2024 (in 0 weeks): Bob
+Bob, you have been chosen for the Spüldienst on 33/2024.
+According to your effective score -0.61 you've had a probability of 42% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Bob, 33/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Mülldienst on 33/2024 (in 0 weeks): Bob
+Bob, you have been chosen for the Mülldienst on 33/2024.
+According to your effective score 0.44 you've had a probability of 27% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Bob, 33/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Spüldienst on 34/2024 (in 1 week): Olli
+Olli, you have been chosen for the Spüldienst on 34/2024.
+According to your effective score 0.58 you've had a probability of 16% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Olli, 34/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Mülldienst on 34/2024 (in 1 week): Jonas
+Jonas, you have been chosen for the Mülldienst on 34/2024.
+According to your effective score 0.53 you've had a probability of 27% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Jonas, 34/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Spüldienst on 35/2024 (in 2 weeks): Till
+Till, you have been chosen for the Spüldienst on 35/2024.
+According to your effective score 0.75 you've had a probability of 27% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Till, 35/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Mülldienst on 35/2024 (in 2 weeks): Alex
+Alex, you have been chosen for the Mülldienst on 35/2024.
+According to your effective score -0.29 you've had a probability of 60% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Alex, 35/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Spüldienst on 36/2024 (in 3 weeks): Jonas
+Jonas, you have been chosen for the Spüldienst on 36/2024.
+According to your effective score 0.21 you've had a probability of 24% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Jonas, 36/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Mülldienst on 36/2024 (in 3 weeks): Thomas
+Thomas, you have been chosen for the Mülldienst on 36/2024.
+According to your effective score -0.97 you've had a probability of 60% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Thomas, 36/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Spüldienst on 37/2024 (in 4 weeks): Till
+Till, you have been chosen for the Spüldienst on 37/2024.
+According to your effective score 0.59 you've had a probability of 22% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Till, 37/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Mülldienst on 37/2024 (in 4 weeks): Alex
+Alex, you have been chosen for the Mülldienst on 37/2024.
+According to your effective score -0.60 you've had a probability of 60% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Alex, 37/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Chores
+## Spüldienst
+Times performed: 4
+Clean the kitchen.
+
+### Plan
++---------+--------+--------+
+|  week   | tenant | rating |
++---------+--------+--------+
+| 33/2024 |  Bob   |        |
++---------+--------+--------+
+| 34/2024 |  Olli  |        |
++---------+--------+--------+
+| 35/2024 |  Till  |        |
++---------+--------+--------+
+| 36/2024 | Jonas  |        |
++---------+--------+--------+
+| 37/2024 |  Till  |        |
++---------+--------+--------+
+
+
+## Mülldienst
+Times performed: 4
+Take out the trash.
+
+### Plan
++---------+--------+--------+
+|  week   | tenant | rating |
++---------+--------+--------+
+| 33/2024 |  Bob   |        |
++---------+--------+--------+
+| 34/2024 | Jonas  |        |
++---------+--------+--------+
+| 35/2024 |  Alex  |        |
++---------+--------+--------+
+| 36/2024 | Thomas |        |
++---------+--------+--------+
+| 37/2024 |  Alex  |        |
++---------+--------+--------+"#
+    );
+    // Bob does two job in the same week (33/2024). This is because everyone is busy that week.
+    let out = db
+        .get_available_tenants(Week::new(34, 2024).unwrap(), "Spüldienst")
+        .await
+        .unwrap();
+    assert_eq!(out, vec![("Thomas".to_string(), 0.0),]);
+    let out = db
+        .get_available_tenants(Week::new(34, 2024).unwrap(), "Mülldienst")
+        .await
+        .unwrap();
+    assert_eq!(out, vec![("Thomas".to_string(), 0.0),]);
 }
 
 #[tokio::test]
@@ -2570,6 +2740,7 @@ async fn prepare_db() -> Db {
         Week::new(33, 2024).unwrap(),
         0,
         0.8,
+        false,
         0x0DDB1A5E5BAD5EEDu64,
         false,
     )
@@ -2580,11 +2751,17 @@ async fn prepare_db() -> Db {
     //     Week::new(33, 2024).unwrap(),
     //     0,
     //     0.8,
+    //     false,
     //     0x0DDB1A5E5BAD5EEDu64,
     //     false,
     // )
     // .await
     // .unwrap();
+    println!(
+        "fallback_week: {} {}",
+        db.fallback_week,
+        db.fallback_week.db_week()
+    );
     let queries = vec![
         r#"
 INSERT INTO Room VALUES

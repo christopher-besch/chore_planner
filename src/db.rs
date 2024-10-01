@@ -42,6 +42,10 @@ pub struct Db {
     ///
     /// See the mathematical proof in the repo.
     gamma: f64,
+    /// When true the chore_planner tries to exclude busy tenants from chore assignments for this week.
+    /// Busy tenants are those already doing a chore the last, this or the next week.
+    /// If you want to prevent the same tenant doing two chores in the same week, enable this.
+    try_exclude_busy_tenants: bool,
     rng: StdRng,
     // Increase the week every time a SIGHUP is received.
     debug: bool,
@@ -55,6 +59,7 @@ impl Db {
         fallback_week: Week,
         weeks_to_plan: u32,
         gamma: f64,
+        try_exclude_busy_tenants: bool,
         seed: u64,
         debug: bool,
     ) -> Result<Self> {
@@ -73,6 +78,7 @@ impl Db {
             fallback_week,
             weeks_to_plan,
             gamma,
+            try_exclude_busy_tenants,
             rng: StdRng::seed_from_u64(seed),
             debug,
         };
