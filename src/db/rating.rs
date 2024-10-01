@@ -90,7 +90,7 @@ FROM ChoreLog
         for poll_id in poll_ids {
             let results = bot.stop_poll(poll_id).await.unwrap_or_else(|e| {
                 eprintln!(
-                    "stopping poll failed, mark the poll {} as completed anyways, this can happen when you the bot is moved to a different chat: {}",
+                    "stopping poll failed, mark the poll {} as completed anyways, this can happen when the bot is moved to a different chat: {}",
                     poll_id, e
                 );
                 vec![]
