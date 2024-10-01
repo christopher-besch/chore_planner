@@ -288,6 +288,11 @@ pub async fn weekly_action<B: MessagableBot + PollableBot>(db: &mut Db, bot: &mu
     let week_changed = db.set_week(Week::from(Local::now().date_naive())).await;
     if !week_changed {
         println!("the current week didn't change");
+        // Perform update_plan anyways. The user might have changed the database manually.
+        // Don't do this on startup to have finer control over when to run this.
+        // -> Crashes don't immediately run this.
+        bot.send_msg(db.update_plan(fmt_replan_cmd(bot)).await)
+            .await;
         return;
     }
 

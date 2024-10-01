@@ -144,7 +144,7 @@ ORDER BY ChoreLog.week;
 
     /// Go through all future ChoreLogs and figure out which ones to update. Update those.
     ///
-    /// This function should be called every time something is changed that affects ChoreLogs
+    /// This function should be called every time something has changed that affects ChoreLogs
     /// planning (e.g. move in/out tenant, mark someone unwilling).
     pub async fn update_plan<F>(&mut self, fmt_replan_cmd: F) -> Result<ReplyMsg>
     where
