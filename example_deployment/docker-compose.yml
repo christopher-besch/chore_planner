@@ -30,6 +30,10 @@ services:
             #     This means the chore_planner only advances the current week at the start of the next week. This should only be used when you upgraded the chore_planner to v1.0.0
             #     and the weekly message for the current week has already been sent.
             CHORE_PLANNER_FALLBACK_TO_LAST_WEEK: true
+            # When true the chore_planner tries to exclude busy tenants from chore assignments for this week.
+            # Busy tenants are those already doing a chore the last, this or the next week.
+            # If you want to prevent the same tenant doing two chores in the same week, enable this.
+            CHORE_PLANNER_TRY_EXCLUDE_BUSY_TENANTS: true
             # the token of the telegram bot
             TELEGRAM_BOT_TOKEN: $TELEGRAM_BOT_TOKEN
             # the id of the chat the bot should listen on

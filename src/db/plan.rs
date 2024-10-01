@@ -2,6 +2,7 @@ use crate::db::*;
 
 use anyhow::Result;
 use rand::{distributions::Distribution, distributions::WeightedIndex};
+use std::collections::HashSet;
 
 impl Db {
     /// Remove all future ChoreLogs that aren't valid (anymore), i.e., because someone moved out.
@@ -29,8 +30,11 @@ WHERE ChoreLog.week >= ?1;
 
         for (week, chore, tenant) in future_chore_logs {
             // Check if the chosen tenant is still available for that chore and that week.
-            let available_tenants = self.get_available_tenants(week, &chore).await?;
-            if !available_tenants
+            // Use get_all_available_tenants_unnormalized instead of get_available_tenants_unnormalized as busy tenants might change.
+            let available_tenants_unnormalized = self
+                .get_all_available_tenants_unnormalized(week, &chore)
+                .await?;
+            if !available_tenants_unnormalized
                 .into_iter()
                 .any(|(available_tenant, _)| available_tenant == tenant)
             {
@@ -88,11 +92,37 @@ AND ChoreLog.chore_id IS NULL;
         Ok(weeks_to_plan)
     }
 
+    /// Busy tenants are those already doing a chore the last, this or the next week.
+    /// Get a list of all those.
+    async fn get_busy_tenants(&mut self, week: Week) -> Result<HashSet<String>> {
+        let sql_rows = sqlx::query(
+            r#"
+SELECT Tenant.name
+FROM Tenant
+JOIN ProfitingTenant
+    ON Tenant.id = ProfitingTenant.tenant_id
+    AND ProfitingTenant.did_work = 1
+    AND ProfitingTenant.week >= ?1 - 1
+    AND ProfitingTenant.week <= ?1 + 1
+GROUP BY Tenant.id, Tenant.name;
+"#,
+        )
+        .bind(week.db_week())
+        .fetch_all(&mut self.con)
+        .await?;
+        self.integrity_check().await?;
+        sql_rows
+            .into_iter()
+            .map(|r| -> Result<String> { Ok(r.try_get(0)?) })
+            .collect()
+    }
+
     /// Return list of (tenant, score) tuples in ascending order of score.
+    /// Busy tenants are not excluded.
     ///
     /// The scores are the sum of all chores, not just the queried one.
     /// You need to normalize the scores so that they add up to 0.
-    pub async fn get_available_tenants(
+    async fn get_all_available_tenants_unnormalized(
         &mut self,
         week: Week,
         chore: &str,
@@ -138,11 +168,54 @@ ORDER BY CAST(TenantScoreSum.score AS REAL) ASC;
         .await?;
         self.integrity_check().await?;
 
-        let unnormalized_tenants = sql_rows
+        sql_rows
             .into_iter()
             .map(|r| -> Result<(String, f64)> { Ok((r.try_get(0)?, r.try_get(1)?)) })
-            .collect::<Result<Vec<(String, f64)>>>()?;
+            .collect::<Result<Vec<(String, f64)>>>()
+    }
 
+    /// Return list of (tenant, score) tuples in ascending order of score.
+    /// Busy tenants are excluded if set to do so in the db struct.
+    ///
+    /// The scores are the sum of all chores, not just the queried one.
+    /// You need to normalize the scores so that they add up to 0.
+    pub async fn get_available_tenants_unnormalized(
+        &mut self,
+        week: Week,
+        chore: &str,
+    ) -> Result<Vec<(String, f64)>> {
+        let busy_tenants = self.get_busy_tenants(week).await?;
+        println!("busy tenants: {:?}", busy_tenants);
+        let all_available_tenants = self
+            .get_all_available_tenants_unnormalized(week, chore)
+            .await?;
+        println!("all available tenants: {:?}", all_available_tenants);
+        let non_busy_available_tenants: Vec<(String, f64)> = all_available_tenants
+            .clone()
+            .into_iter()
+            .filter(|(t, _)| !self.try_exclude_busy_tenants || !busy_tenants.contains(t))
+            .collect();
+
+        if !self.try_exclude_busy_tenants {
+            debug_assert_eq!(
+                self.get_all_available_tenants_unnormalized(week, chore)
+                    .await
+                    .unwrap(),
+                non_busy_available_tenants
+            );
+        }
+
+        match non_busy_available_tenants.is_empty() {
+            true => Ok(all_available_tenants),
+            false => Ok(non_busy_available_tenants),
+        }
+    }
+
+    /// Scale all scores so that they add up to 0.
+    pub fn normalize_tenants(
+        &mut self,
+        unnormalized_tenants: Vec<(String, f64)>,
+    ) -> Vec<(String, f64)> {
         let sum = -unnormalized_tenants
             .iter()
             .fold(0.0, |sum, (_, s2)| sum + s2);
@@ -156,10 +229,11 @@ ORDER BY CAST(TenantScoreSum.score AS REAL) ASC;
             .map(|(t, s)| (t, s + sum / n))
             .collect();
 
+        println!("normalized tenants: {:?}", normalized_tenants);
         let sum = -normalized_tenants.iter().fold(0.0, |sum, (_, s2)| sum + s2);
         debug_assert!(sum.abs() < 0.0001);
 
-        Ok(normalized_tenants)
+        normalized_tenants
     }
 
     /// Convert every tenants score into a probability.
@@ -192,6 +266,7 @@ ORDER BY CAST(TenantScoreSum.score AS REAL) ASC;
             })
             .collect();
 
+        println!("tenant Distribution: {:?}", dist);
         let sum: f64 = dist.iter().sum();
         debug_assert!(dist.iter().all(|p| *p > 0.0 || *p < 1.0));
         debug_assert!((sum - 1.0).abs() < 0.0001);
@@ -209,7 +284,6 @@ ORDER BY CAST(TenantScoreSum.score AS REAL) ASC;
         tenants: Vec<(String, f64)>,
     ) -> Result<(String, f64, f64)> {
         let dist = self.calc_tenant_distribution(tenants.clone());
-        println!("tenant Distribution: {:?}", dist);
         let idx = WeightedIndex::new(&dist)?.sample(&mut self.rng);
         Ok((tenants[idx].0.clone(), tenants[idx].1, dist[idx]))
     }
@@ -228,8 +302,8 @@ ORDER BY CAST(TenantScoreSum.score AS REAL) ASC;
         F: FnOnce(&str, Week) -> String,
     {
         println!("planning {} {}", chore, week);
-        let tenants = self.get_available_tenants(week, chore).await?;
-        println!("available tenants: {:?}", tenants);
+        let unnormalized_tenants = self.get_available_tenants_unnormalized(week, chore).await?;
+        let tenants = self.normalize_tenants(unnormalized_tenants);
         if tenants.is_empty() {
             return Ok(ReplyMsg::new());
         }

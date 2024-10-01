@@ -33,6 +33,11 @@ async fn run_loop<T: MessagableBot + PollableBot>(mut bot: T) {
         .parse::<f64>()
         .context("failed to convert CHORE_PLANNER_GAMMA to f64")
         .unwrap();
+    let try_exclude_busy_tenants = env::var("CHORE_PLANNER_TRY_EXCLUDE_BUSY_TENANTS")
+        .expect("the environment variable CHORE_PLANNER_TRY_EXCLUDE_BUSY_TENANTS must be provided")
+        .parse::<bool>()
+        .context("failed to convert CHORE_PLANNER_TRY_EXCLUDE_BUSY_TENANTS to bool")
+        .unwrap();
     let db_path = env::var("CHORE_PLANNER_DB_PATH")
         .expect("the environment variable CHORE_PLANNER_DB_PATH must be provided");
     let fallback_to_last_week = env::var("CHORE_PLANNER_FALLBACK_TO_LAST_WEEK")
@@ -50,6 +55,7 @@ async fn run_loop<T: MessagableBot + PollableBot>(mut bot: T) {
         fallback_week,
         weeks_to_plan,
         gamma,
+        try_exclude_busy_tenants,
         rand::random::<u64>(),
         debug,
     )
