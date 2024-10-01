@@ -1292,10 +1292,11 @@ async fn test_revoke_exemptions() {
 async fn test_get_all_available_tenants() {
     let mut db = prepare_db().await;
     db.try_exclude_busy_tenants = false;
-    let out = db
-        .get_available_tenants(Week::new(34, 2024).unwrap(), "Spüldienst")
+    let out_unnormalized = db
+        .get_available_tenants_unnormalized(Week::new(34, 2024).unwrap(), "Spüldienst")
         .await
         .unwrap();
+    let out = db.normalize_tenants(out_unnormalized);
     assert_eq!(
         out,
         vec![
@@ -1314,10 +1315,11 @@ async fn test_get_available_tenants() {
     let mut db = prepare_db().await;
     db.try_exclude_busy_tenants = true;
     db.weeks_to_plan = 5;
-    let out = db
-        .get_available_tenants(Week::new(34, 2024).unwrap(), "Spüldienst")
+    let out_unnormalized = db
+        .get_available_tenants_unnormalized(Week::new(34, 2024).unwrap(), "Spüldienst")
         .await
         .unwrap();
+    let out = db.normalize_tenants(out_unnormalized);
     assert_eq!(
         out,
         vec![
@@ -1466,15 +1468,17 @@ Take out the trash.
 +---------+--------+--------+"#
     );
     // Bob does two job in the same week (33/2024). This is because everyone is busy that week.
-    let out = db
-        .get_available_tenants(Week::new(34, 2024).unwrap(), "Spüldienst")
+    let out_unnormalized = db
+        .get_available_tenants_unnormalized(Week::new(34, 2024).unwrap(), "Spüldienst")
         .await
         .unwrap();
+    let out = db.normalize_tenants(out_unnormalized);
     assert_eq!(out, vec![("Thomas".to_string(), 0.0),]);
-    let out = db
-        .get_available_tenants(Week::new(34, 2024).unwrap(), "Mülldienst")
+    let out_unnormalized = db
+        .get_available_tenants_unnormalized(Week::new(34, 2024).unwrap(), "Mülldienst")
         .await
         .unwrap();
+    let out = db.normalize_tenants(out_unnormalized);
     assert_eq!(out, vec![("Thomas".to_string(), 0.0),]);
 }
 
@@ -2080,6 +2084,84 @@ Take out the trash.
 |  week   | tenant | rating |
 +---------+--------+--------+
 | 33/2024 |  Alex  |        |
++---------+--------+--------+
+| 34/2024 | Jonas  |        |
++---------+--------+--------+
+| 35/2024 |  Alex  |        |
++---------+--------+--------+
+| 36/2024 |  Alex  |        |
++---------+--------+--------+
+| 37/2024 | Jonas  |        |
++---------+--------+--------+"#
+    );
+}
+
+#[tokio::test]
+async fn test_replan_update_try_to_exclude_busy() {
+    let mut db = prepare_db().await;
+    db.weeks_to_plan = 5;
+    db.update_plan(|t, w| format!("testing testing, {}, {}", t, w))
+        .await
+        .unwrap();
+
+    // setting this after update_plan makes the old plan intentionally bad considering busy tenants
+    db.try_exclude_busy_tenants = true;
+    let out = db
+        .replan("Bob", Week::new(33, 2024).unwrap(), |t, w| {
+            format!("testing testing, {}, {}", t, w)
+        })
+        .await
+        .unwrap();
+    assert_eq!(
+        out.mono_msg,
+        r#"# Spüldienst on 33/2024 (in 0 weeks): Till
+Till, you have been chosen for the Spüldienst on 33/2024.
+According to your effective score 0.00 you've had a probability of 100% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Till, 33/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Mülldienst on 33/2024 (in 0 weeks): Jonas
+Jonas, you have been chosen for the Mülldienst on 33/2024.
+According to your effective score -0.06 you've had a probability of 60% to be chosen.
+If you're unhappy about that, type this to schedule someone else:
+    testing testing, Jonas, 33/2024
+Alternatively you can move out and then back in if you're on vacation.
+
+
+
+# Chores
+## Spüldienst
+Times performed: 4
+Clean the kitchen.
+
+### Plan
++---------+--------+--------+
+|  week   | tenant | rating |
++---------+--------+--------+
+| 33/2024 |  Till  |        |
++---------+--------+--------+
+| 34/2024 |  Olli  |        |
++---------+--------+--------+
+| 35/2024 |  Olli  |        |
++---------+--------+--------+
+| 36/2024 |  Till  |        |
++---------+--------+--------+
+| 37/2024 |  Alex  |        |
++---------+--------+--------+
+
+
+## Mülldienst
+Times performed: 4
+Take out the trash.
+
+### Plan
++---------+--------+--------+
+|  week   | tenant | rating |
++---------+--------+--------+
+| 33/2024 | Jonas  |        |
 +---------+--------+--------+
 | 34/2024 | Jonas  |        |
 +---------+--------+--------+

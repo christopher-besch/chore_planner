@@ -30,8 +30,11 @@ WHERE ChoreLog.week >= ?1;
 
         for (week, chore, tenant) in future_chore_logs {
             // Check if the chosen tenant is still available for that chore and that week.
-            let available_tenants = self.get_available_tenants(week, &chore).await?;
-            if !available_tenants
+            // Use get_all_available_tenants_unnormalized instead of get_available_tenants_unnormalized as busy tenants might change.
+            let available_tenants_unnormalized = self
+                .get_all_available_tenants_unnormalized(week, &chore)
+                .await?;
+            if !available_tenants_unnormalized
                 .into_iter()
                 .any(|(available_tenant, _)| available_tenant == tenant)
             {
@@ -101,7 +104,7 @@ JOIN ProfitingTenant
     AND ProfitingTenant.did_work = 1
     AND ProfitingTenant.week >= ?1 - 1
     AND ProfitingTenant.week <= ?1 + 1
-GROUP BY Tenant.id, Tenant.name
+GROUP BY Tenant.id, Tenant.name;
 "#,
         )
         .bind(week.db_week())
@@ -119,7 +122,7 @@ GROUP BY Tenant.id, Tenant.name
     ///
     /// The scores are the sum of all chores, not just the queried one.
     /// You need to normalize the scores so that they add up to 0.
-    async fn get_all_available_tenants(
+    async fn get_all_available_tenants_unnormalized(
         &mut self,
         week: Week,
         chore: &str,
@@ -175,26 +178,44 @@ ORDER BY CAST(TenantScoreSum.score AS REAL) ASC;
     /// Busy tenants are excluded if set to do so in the db struct.
     ///
     /// The scores are the sum of all chores, not just the queried one.
-    /// The scores are already normalized.
-    pub async fn get_available_tenants(
+    /// You need to normalize the scores so that they add up to 0.
+    pub async fn get_available_tenants_unnormalized(
         &mut self,
         week: Week,
         chore: &str,
     ) -> Result<Vec<(String, f64)>> {
         let busy_tenants = self.get_busy_tenants(week).await?;
         println!("busy tenants: {:?}", busy_tenants);
-        let all_available_tenants = self.get_all_available_tenants(week, chore).await?;
+        let all_available_tenants = self
+            .get_all_available_tenants_unnormalized(week, chore)
+            .await?;
         println!("all available tenants: {:?}", all_available_tenants);
         let non_busy_available_tenants: Vec<(String, f64)> = all_available_tenants
             .clone()
             .into_iter()
             .filter(|(t, _)| !self.try_exclude_busy_tenants || !busy_tenants.contains(t))
             .collect();
-        let unnormalized_tenants = match non_busy_available_tenants.is_empty() {
-            true => all_available_tenants,
-            false => non_busy_available_tenants,
-        };
 
+        if !self.try_exclude_busy_tenants {
+            debug_assert_eq!(
+                self.get_all_available_tenants_unnormalized(week, chore)
+                    .await
+                    .unwrap(),
+                non_busy_available_tenants
+            );
+        }
+
+        match non_busy_available_tenants.is_empty() {
+            true => Ok(all_available_tenants),
+            false => Ok(non_busy_available_tenants),
+        }
+    }
+
+    /// Scale all scores so that they add up to 0.
+    pub fn normalize_tenants(
+        &mut self,
+        unnormalized_tenants: Vec<(String, f64)>,
+    ) -> Vec<(String, f64)> {
         let sum = -unnormalized_tenants
             .iter()
             .fold(0.0, |sum, (_, s2)| sum + s2);
@@ -212,7 +233,7 @@ ORDER BY CAST(TenantScoreSum.score AS REAL) ASC;
         let sum = -normalized_tenants.iter().fold(0.0, |sum, (_, s2)| sum + s2);
         debug_assert!(sum.abs() < 0.0001);
 
-        Ok(normalized_tenants)
+        normalized_tenants
     }
 
     /// Convert every tenants score into a probability.
@@ -281,7 +302,8 @@ ORDER BY CAST(TenantScoreSum.score AS REAL) ASC;
         F: FnOnce(&str, Week) -> String,
     {
         println!("planning {} {}", chore, week);
-        let tenants = self.get_available_tenants(week, chore).await?;
+        let unnormalized_tenants = self.get_available_tenants_unnormalized(week, chore).await?;
+        let tenants = self.normalize_tenants(unnormalized_tenants);
         if tenants.is_empty() {
             return Ok(ReplyMsg::new());
         }
