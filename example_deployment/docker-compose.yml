@@ -22,7 +22,7 @@ services:
             #
             # See the mathematical proof in docs/probability_distribution.pdf in the repo
             CHORE_PLANNER_GAMMA: 0.0
-            # When the chore_planner never ran befor or was upgraded to v1.0.0 the chore_planner doesn't know when it ran last.
+            # When the chore_planner never ran before or was upgraded to v1.0.0 the chore_planner doesn't know when it ran last.
             # The fallback week is used in this case.
             # When this is true, the last week is used.
             #     This means the chore_planner prints out the weekly message at the first weekly action (i.e., the first SIGHUP), which is what you want.
