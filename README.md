@@ -58,9 +58,9 @@ The "Dishwashing Duty" on week "32/2024" is an example **ChoreLog**.
 When "Hanna" performs this **ChoreLog** everyone on her flat profits from that.
 The chore_planner needs to remember this.
 
-To achieve a fair and flexible **ChoreLog** assignment every **tenant** has a score.
-In the example above the chore_planner rewards "Hanna" by increasing her score by `1`.
-Everyone else's score is reduced by `1/(N-1)` with `N` being the number of profiting **tenants**.
+To achieve a fair and flexible **ChoreLog** assignment every **tenant** has a score for each chore.
+In the example above the chore_planner rewards "Hanna" by increasing her "Dishwashing Duty" score by `1`.
+Everyone else's "Dishwashing Duty" score is reduced by `1/(N-1)` with `N` being the number of profiting **tenants**.
 
 The chore_planner randomly chooses a **tenant** for the **ChoreLog**, each with their own probability.
 Low scores imply the **tenant** didn't do their chores often enough and are thus punished with a higher probability of being chosen.
@@ -68,6 +68,9 @@ High scores reduce the **tenant**'s probability.
 How drastically the chore_planner punished negative scores is affected by the **gamma** value in the [config](#deployment-and-config).
 
 Exempt tenants, unwilling tenants and tenants not living in a room are not considered.
+When `CHORE_PLANNER_TRY_EXCLUDE_BUSY_TENANTS` is enabled busy tenants are excluded at first.
+Busy tenants are those already doing a chore the last, this or the next week.
+Only when there are only busy tenants available they are considered, too.
 
 There is a [(german) mathematical explanation](docs/probability_distribution.pdf) of the chore_planner's probability distribution.
 

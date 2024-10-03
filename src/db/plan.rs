@@ -120,7 +120,7 @@ GROUP BY Tenant.id, Tenant.name;
     /// Return list of (tenant, score) tuples in ascending order of score.
     /// Busy tenants are not excluded.
     ///
-    /// The scores are the sum of all chores, not just the queried one.
+    /// The scores are just the score for the queried chores.
     /// You need to normalize the scores so that they add up to 0.
     async fn get_all_available_tenants_unnormalized(
         &mut self,
@@ -133,10 +133,11 @@ GROUP BY Tenant.id, Tenant.name;
 -- The tenant's scores don't sum up to 0 as some tenants are excluded.
 --
 -- Only consider active chores.
-SELECT Tenant.name, CAST(TenantScoreSum.score AS REAL)
+SELECT Tenant.name, CAST(TenantScore.score AS REAL)
 FROM Tenant, Chore
-JOIN TenantScoreSum
-    ON Tenant.id = TenantScoreSum.tenant_id
+JOIN TenantScore
+    ON Tenant.id = TenantScore.tenant_id
+    AND Chore.id = TenantScore.chore_id
 -- ensure tenant lives here in the week
 JOIN LivesIn
     ON Tenant.id = LivesIn.tenant_id
@@ -159,7 +160,7 @@ LEFT JOIN Unwilling
 WHERE ChoreExemption.chore_id IS NULL
 AND Unwilling.tenant_id IS NULL
 AND Chore.name = ?2
-ORDER BY CAST(TenantScoreSum.score AS REAL) ASC;
+ORDER BY CAST(TenantScore.score AS REAL) ASC;
 "#,
         )
         .bind(week.db_week())
@@ -177,7 +178,7 @@ ORDER BY CAST(TenantScoreSum.score AS REAL) ASC;
     /// Return list of (tenant, score) tuples in ascending order of score.
     /// Busy tenants are excluded if set to do so in the db struct.
     ///
-    /// The scores are the sum of all chores, not just the queried one.
+    /// The scores are just the score for the queried chores.
     /// You need to normalize the scores so that they add up to 0.
     pub async fn get_available_tenants_unnormalized(
         &mut self,
