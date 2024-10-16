@@ -9,6 +9,8 @@ use super::transports;
 use anyhow::Result;
 use jsonrpsee::async_client::Client;
 use jsonrpsee::async_client::ClientBuilder;
+use jsonrpsee::core::client::Subscription;
+use serde::Deserialize;
 use serde_json::Value;
 
 pub struct SignalBotBuilder {
@@ -23,6 +25,9 @@ pub struct SignalBot {
     client: Client,
     group_id: String,
     account_name: String,
+
+    // None when destructed already
+    receive_stream: Option<Subscription<Value>>,
 }
 
 impl SignalBotBuilder {
@@ -66,9 +71,11 @@ impl SignalBotBuilder {
             .await
             .unwrap();
         let client = ClientBuilder::default().build_with_tokio(sender, receiver);
+        let receive_stream = Some(client.subscribe_receive(None).await.unwrap());
 
         SignalBot {
-            client: client,
+            client,
+            receive_stream,
             group_id: self.group_id.clone().unwrap(),
             account_name: self.account_name.clone().unwrap(),
         }
@@ -77,36 +84,85 @@ impl SignalBotBuilder {
 
 impl SignalBot {
     fn parse_update(&mut self, update: Value) -> Option<String> {
-        // TODO: implement
-        Some(format!("{update:#?}"))
+        #[derive(Deserialize, Debug)]
+        struct GroupInfo {
+            #[serde(rename = "groupId")]
+            group_id: String,
+        }
+        #[derive(Deserialize, Debug)]
+        struct SentMessage {
+            #[serde(rename = "groupInfo")]
+            group_info: GroupInfo,
+            message: String,
+        }
+        #[derive(Deserialize, Debug)]
+        struct SyncMessage {
+            #[serde(rename = "sentMessage")]
+            sent_message: SentMessage,
+        }
+        #[derive(Deserialize, Debug)]
+        struct Envelope {
+            #[serde(rename = "sourceNumber")]
+            source_number: String,
+            #[serde(rename = "syncMessage")]
+            sync_message: SyncMessage,
+        }
+        #[derive(Deserialize, Debug)]
+        struct Update {
+            account: String,
+            envelope: Envelope,
+        }
+
+        match serde_json::from_value::<Update>(update) {
+            Ok(update) => {
+                println!("{update:?}");
+                // TODO: enable this again after testing is done
+                // if update.account != self.account_name {
+                //     return None;
+                // }
+                // if update.envelope.source_number == self.account_name {
+                //     return None;
+                // }
+                if update
+                    .envelope
+                    .sync_message
+                    .sent_message
+                    .group_info
+                    .group_id
+                    != self.group_id
+                {
+                    return None;
+                }
+                Some(update.envelope.sync_message.sent_message.message)
+            }
+            Err(e) => {
+                println!("{e:?}");
+                None
+            }
+        }
     }
 }
 
 impl MessagableBot for SignalBot {
     async fn next_msg(&mut self) -> Option<String> {
-        // TODO: remove unwrap
-        // TODO: maybe move subscribe to constructor or builder
-        let mut stream = self.client.subscribe_receive(None).await.unwrap();
-
+        let stream = self.receive_stream.as_mut().unwrap();
         let update = stream.next().await;
-        let msg = match update {
+        match update {
             Some(Ok(raw_msg)) => self.parse_update(raw_msg),
             Some(Err(e)) => {
                 eprintln!("getting the next signal message failed: {:#}", e);
                 None
             }
             None => None,
-        };
-        // TODO: remove unwrap
-        stream.unsubscribe().await.unwrap();
-        return msg;
+        }
     }
 
     async fn send_msg(&mut self, msg: Result<ReplyMsg>) {
         let text = msg.unwrap().mono_msg; // TODO
         let length = text.len();
 
-        let result = self.client
+        let result = self
+            .client
             .send(
                 None,
                 vec![],
@@ -133,7 +189,6 @@ impl MessagableBot for SignalBot {
                 None,
             )
             .await;
-    
 
         println!("Send: {:?}", result.is_ok());
     }
@@ -141,12 +196,19 @@ impl MessagableBot for SignalBot {
     fn get_name(&self) -> &str {
         self.account_name.as_str()
     }
+
+    // this can't be implemented in the drop function as it is async
+    async fn shutdown(&mut self) {
+        let stream = std::mem::replace(&mut self.receive_stream, None).unwrap();
+        stream.unsubscribe().await.unwrap();
+        println!("closed Signal receive stream");
+    }
 }
 
 /*
 impl PollableBot for SignalBot {
     async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i32> {}
-    
+
     async fn stop_poll(&mut self, poll_id: i32) -> Result<Vec<(String, u32)>> {}
 }
 */

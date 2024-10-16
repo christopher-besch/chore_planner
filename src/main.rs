@@ -1,10 +1,10 @@
 mod bot;
 mod command;
 mod db;
+mod signal;
 mod telegram_bot;
 mod test_bot;
 mod week;
-mod signal;
 
 use crate::{
     bot::MessagableBot, bot::PollableBot, db::Db, telegram_bot::TelegramBotBuilder, week::Week,
@@ -92,15 +92,29 @@ async fn run_loop<T: MessagableBot + PollableBot>(mut bot: T) {
 
 #[tokio::main]
 async fn main() {
+    println!("creating bot");
+    let mut b = SignalBotBuilder::new()
+        .account_name("Test".to_string())
+        .endpoint("127.0.0.1:42069".parse().unwrap())
+        .group_id("Wbvq4+oxG9b+RY619QbRMLyffm4pPOTqmMJJlOWYoYs=".to_string())
+        .build()
+        .await;
+    println!("send msg");
+    b.send_msg(Ok(ReplyMsg {
+        mono_msg: "Test123".to_string(),
+        tags: HashSet::new(),
+    }))
+    .await;
 
-    let mut b = SignalBotBuilder::new().account_name("Test".to_string()).endpoint("127.0.0.1:42069".parse().unwrap()).group_id("Wbvq4+oxG9b+RY619QbRMLyffm4pPOTqmMJJlOWYoYs=".to_string()).build().await;
-    b.send_msg(Ok(ReplyMsg {mono_msg: "Test".to_string(), tags: HashSet::new()})).await;
-
+    println!("receive");
     loop {
         let msg = b.next_msg().await;
-        println!("{msg:#?}");
+        if let Some(msg) = msg {
+            println!("{}", msg);
+        }
     }
 
+    b.shutdown().await;
     return;
 
     let telegram_bot_token = env::var("TELEGRAM_BOT_TOKEN")

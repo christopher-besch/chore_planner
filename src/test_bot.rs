@@ -58,6 +58,8 @@ impl<
     fn get_name(&self) -> &str {
         "hihi_im_a_test"
     }
+
+    async fn shutdown(&mut self) {}
 }
 
 impl<
