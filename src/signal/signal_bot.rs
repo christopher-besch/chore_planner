@@ -9,6 +9,7 @@ use super::transports;
 use anyhow::Result;
 use jsonrpsee::async_client::Client;
 use jsonrpsee::async_client::ClientBuilder;
+use serde_json::Value;
 
 pub struct SignalBotBuilder {
     endpoint: Option<SocketAddr>,
@@ -74,9 +75,31 @@ impl SignalBotBuilder {
     }
 }
 
+impl SignalBot {
+    fn parse_update(&mut self, update: Value) -> Option<String> {
+        // TODO: implement
+        Some(format!("{update:#?}"))
+    }
+}
+
 impl MessagableBot for SignalBot {
     async fn next_msg(&mut self) -> Option<String> {
-        None
+        // TODO: remove unwrap
+        // TODO: maybe move subscribe to constructor or builder
+        let mut stream = self.client.subscribe_receive(None).await.unwrap();
+
+        let update = stream.next().await;
+        let msg = match update {
+            Some(Ok(raw_msg)) => self.parse_update(raw_msg),
+            Some(Err(e)) => {
+                eprintln!("getting the next signal message failed: {:#}", e);
+                None
+            }
+            None => None,
+        };
+        // TODO: remove unwrap
+        stream.unsubscribe().await.unwrap();
+        return msg;
     }
 
     async fn send_msg(&mut self, msg: Result<ReplyMsg>) {
@@ -120,8 +143,10 @@ impl MessagableBot for SignalBot {
     }
 }
 
+/*
 impl PollableBot for SignalBot {
     async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i32> {}
-
+    
     async fn stop_poll(&mut self, poll_id: i32) -> Result<Vec<(String, u32)>> {}
 }
+*/

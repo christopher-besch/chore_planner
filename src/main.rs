@@ -96,6 +96,11 @@ async fn main() {
     let mut b = SignalBotBuilder::new().account_name("Test".to_string()).endpoint("127.0.0.1:42069".parse().unwrap()).group_id("Wbvq4+oxG9b+RY619QbRMLyffm4pPOTqmMJJlOWYoYs=".to_string()).build().await;
     b.send_msg(Ok(ReplyMsg {mono_msg: "Test".to_string(), tags: HashSet::new()})).await;
 
+    loop {
+        let msg = b.next_msg().await;
+        println!("{msg:#?}");
+    }
+
     return;
 
     let telegram_bot_token = env::var("TELEGRAM_BOT_TOKEN")
