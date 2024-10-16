@@ -205,10 +205,12 @@ impl MessagableBot for SignalBot {
     }
 }
 
-/*
 impl PollableBot for SignalBot {
-    async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i32> {}
+    async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i32> {
+        panic!("implement");
+    }
 
-    async fn stop_poll(&mut self, poll_id: i32) -> Result<Vec<(String, u32)>> {}
+    async fn stop_poll(&mut self, poll_id: i32) -> Result<Vec<(String, u32)>> {
+        panic!("implement");
+    }
 }
-*/
