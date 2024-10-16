@@ -11,9 +11,11 @@ use crate::{
 };
 
 use anyhow::Context;
+use bot::ReplyMsg;
 use chrono::Local;
 use command::{handle_next_msg, weekly_action};
-use std::env;
+use signal::signal_bot::SignalBotBuilder;
+use std::{collections::HashSet, env};
 use teloxide::types::ChatId;
 use tokio::signal::unix::{signal, SignalKind};
 
@@ -90,6 +92,12 @@ async fn run_loop<T: MessagableBot + PollableBot>(mut bot: T) {
 
 #[tokio::main]
 async fn main() {
+
+    let mut b = SignalBotBuilder::new().account_name("Test".to_string()).endpoint("127.0.0.1:42069".parse().unwrap()).group_id("Wbvq4+oxG9b+RY619QbRMLyffm4pPOTqmMJJlOWYoYs=".to_string()).build().await;
+    b.send_msg(Ok(ReplyMsg {mono_msg: "Test".to_string(), tags: HashSet::new()})).await;
+
+    return;
+
     let telegram_bot_token = env::var("TELEGRAM_BOT_TOKEN")
         .expect("the environment variable TELEGRAM_BOT_TOKEN must be provided");
     let telegram_chat_id = ChatId(
