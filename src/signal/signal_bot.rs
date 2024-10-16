@@ -55,7 +55,11 @@ impl SignalBotBuilder {
 
 impl MessagableBot for SignalBot {
     async fn next_msg(&mut self) -> Option<String> {
-        None
+        let mut stream = self.client.subscribe_receive(None);
+        let msg = stream.next().await;
+        stream.unsubscribe().await.unwrap();
+
+        return msg;
     }
 
     async fn send_msg(&mut self, msg: Result<ReplyMsg>) {
