@@ -7,15 +7,16 @@ mod test_bot;
 mod week;
 
 use crate::{
-    bot::MessagableBot, bot::PollableBot, db::Db, telegram_bot::TelegramBotBuilder, week::Week,
+    bot::MessagableBot, bot::PollableBot, db::Db, signal_bot::SignalBotBuilder,
+    telegram_bot::TelegramBotBuilder, week::Week,
 };
 
 use anyhow::Context;
 use bot::BotProtocol;
+use bot::ReplyMsg;
 use chrono::Local;
 use command::{handle_next_msg, weekly_action};
-use signal_bot::SignalBot;
-use std::env;
+use std::{collections::HashSet, env};
 use teloxide::types::ChatId;
 use tokio::signal::unix::{signal, SignalKind};
 
@@ -140,15 +141,40 @@ async fn initialize_and_run() {
             let account_name = env::var("SIGNAL_ACCOUNT_NAME")
                 .expect("the environment variable SIGNAL_ACCOUNT_NAME must be provided");
 
-            // TODO: implement
-            let bot = SignalBot {};
-            run_loop(db, bot).await;
+            panic!("TODO: implement");
+            // run_loop(db, bot).await;
         }
     }
 }
 
 #[tokio::main]
 async fn main() {
+    // TODO: remove
+    println!("creating bot");
+    let mut b = SignalBotBuilder::new()
+        .account_name("Test".to_string())
+        .endpoint("127.0.0.1:42069".parse().unwrap())
+        .group_id("Wbvq4+oxG9b+RY619QbRMLyffm4pPOTqmMJJlOWYoYs=".to_string())
+        .build()
+        .await;
+    println!("send msg");
+    b.send_msg(Ok(ReplyMsg {
+        mono_msg: "Test123".to_string(),
+        tags: HashSet::new(),
+    }))
+    .await;
+
+    println!("receive");
+    loop {
+        let msg = b.next_msg().await;
+        if let Some(msg) = msg {
+            println!("{}", msg);
+        }
+    }
+
+    b.shutdown().await;
+    return;
+
     // TODO: ASCII art splash screen
     initialize_and_run().await;
 }

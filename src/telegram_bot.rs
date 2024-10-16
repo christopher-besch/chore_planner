@@ -214,6 +214,8 @@ impl<'a> MessagableBot for TelegramBot<'a> {
     fn get_name(&self) -> &str {
         &self.bot_username
     }
+
+    async fn shutdown(&mut self) {}
 }
 
 impl<'a> PollableBot for TelegramBot<'a> {

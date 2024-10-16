@@ -56,6 +56,11 @@ pub trait MessagableBot {
     async fn send_msg(&mut self, msg: Result<ReplyMsg>);
     /// Get the name of the bot i.e., the prefix of all accepted received messages.
     fn get_name(&self) -> &str;
+
+    // This needs to be called once the bot isn't used any longer.
+    //
+    // This can't be implemented in the drop function as it is async.
+    async fn shutdown(&mut self);
 }
 
 /// a bot that supports creating polls
