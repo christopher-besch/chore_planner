@@ -66,7 +66,7 @@ impl<T: Send + Stream<Item = Result<String, std::io::Error>> + Unpin + 'static> 
     }
 }
 
-/// Creates the type RpcClient
+/// Creates the struct RpcClient
 #[rpc(client)]
 trait Rpc {
     #[allow(non_snake_case)]

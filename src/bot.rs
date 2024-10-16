@@ -67,9 +67,9 @@ pub trait MessagableBot {
 pub trait PollableBot {
     /// Create a new poll with a question and list of options.
     /// Return the identifier of this poll.
-    async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i32>;
+    async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i64>;
     /// Stop the specified poll and return a list of (option, count_chosen) tuples.
-    async fn stop_poll(&mut self, poll_id: i32) -> Result<Vec<(String, u32)>>;
+    async fn stop_poll(&mut self, poll_id: i64) -> Result<Vec<(String, u32)>>;
 }
 
 /// the types of protocols the chore_planner supports in production

@@ -4,9 +4,12 @@ use crate::bot::MessagableBot;
 use crate::bot::PollableBot;
 use crate::bot::ReplyMsg;
 
+use crate::paginate::paginate_str;
 use crate::signal_bot::signal_cli_interface::tcp;
 use crate::signal_bot::signal_cli_interface::RpcClient;
 
+use anyhow::bail;
+use anyhow::Context;
 use anyhow::Result;
 use jsonrpsee::async_client::Client;
 use jsonrpsee::async_client::ClientBuilder;
@@ -14,6 +17,8 @@ use jsonrpsee::core::client::Subscription;
 use serde::Deserialize;
 use serde_json::Value;
 use std::net::SocketAddr;
+use std::time::Duration;
+use tokio::time::sleep;
 
 pub struct SignalBotBuilder {
     endpoint: Option<SocketAddr>,
@@ -104,8 +109,11 @@ impl SignalBot {
         struct Envelope {
             #[serde(rename = "sourceNumber")]
             source_number: String,
+            // syncMessage when message is from self, dataMessage when from someone else
             #[serde(rename = "syncMessage")]
-            sync_message: SyncMessage,
+            sync_message: Option<SyncMessage>,
+            #[serde(rename = "dataMessage")]
+            data_message: Option<SentMessage>,
         }
         #[derive(Deserialize, Debug)]
         struct Update {
@@ -113,9 +121,15 @@ impl SignalBot {
             envelope: Envelope,
         }
 
-        match serde_json::from_value::<Update>(update) {
+        match serde_json::from_value::<Update>(update.clone()) {
             Ok(update) => {
-                println!("{update:?}");
+                let sent_message = match update.envelope.sync_message {
+                    Some(sync_message) => sync_message.sent_message,
+                    None => match update.envelope.data_message {
+                        Some(data_message) => data_message,
+                        None => return None,
+                    },
+                };
                 // TODO: enable this again after testing is done
                 // if update.account != self.account_name {
                 //     return None;
@@ -123,22 +137,77 @@ impl SignalBot {
                 // if update.envelope.source_number == self.account_name {
                 //     return None;
                 // }
-                if update
-                    .envelope
-                    .sync_message
-                    .sent_message
-                    .group_info
-                    .group_id
-                    != self.group_id
-                {
+                if sent_message.group_info.group_id != self.group_id {
                     return None;
                 }
-                Some(update.envelope.sync_message.sent_message.message)
+                Some(sent_message.message)
             }
             Err(e) => {
-                println!("{e:?}");
+                println!("Warning: {e:?}\n{update:#?}");
                 None
             }
+        }
+    }
+
+    async fn send_mono_str(&self, msg: &str) -> Result<i64> {
+        let length = msg.len();
+        let format = vec![format!("0:{length}:MONOSPACE")];
+        self.send_raw_str(msg, format).await
+    }
+    async fn send_unformatted_str(&self, msg: &str) -> Result<i64> {
+        self.send_raw_str(msg, vec![]).await
+    }
+    async fn send_raw_str(&self, msg: &str, format: Vec<String>) -> Result<i64> {
+        // may the rust gods have mercy with this API
+        let result = self
+            .client
+            .send(
+                None,
+                vec![],
+                vec![self.group_id.clone()],
+                false,
+                false,
+                msg.to_string(),
+                vec![],
+                vec![],
+                format,
+                None,
+                None,
+                None,
+                vec![],
+                vec![],
+                vec![],
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await?;
+
+        #[derive(Deserialize, Debug)]
+        struct SendResult {
+            #[serde(rename = "type")]
+            type_field: String,
+        }
+        #[derive(Deserialize, Debug)]
+        struct SendReturn {
+            results: Vec<SendResult>,
+            timestamp: i64,
+        }
+
+        let send_return =
+            serde_json::from_value::<SendReturn>(result).context("Sending Message failed")?;
+        match send_return
+            .results
+            .iter()
+            .all(|r| r.type_field == "SUCCESS")
+        {
+            true => Ok(send_return.timestamp),
+            false => bail!("send_return isn't all success: {send_return:#?}"),
         }
     }
 }
@@ -158,42 +227,52 @@ impl MessagableBot for SignalBot {
     }
 
     async fn send_msg(&mut self, msg: Result<ReplyMsg>) {
-        let text = msg.unwrap().mono_msg; // TODO
-        let length = text.len();
+        const TIME_BETWEEN_MESSAGES: Duration = Duration::from_millis(500);
+        // signal doesn't appear to have a limit but too long messages need to be unfolded
+        const MSG_LIMIT: usize = 2000;
 
-        let result = self
-            .client
-            .send(
-                None,
-                vec![],
-                vec![self.group_id.clone()],
-                false,
-                false,
-                format!("{text}"),
-                vec![],
-                vec![],
-                vec![format!("0:{length}:MONOSPACE")],
-                None,
-                None,
-                None,
-                vec![],
-                vec![],
-                vec![],
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-            )
-            .await;
+        let msg = msg.unwrap_or_else(|e| {
+            eprintln!("sending error: {:?}", e);
+            ReplyMsg::from_mono(&e.to_string())
+        });
+        let mut paginated_mono_msgs = paginate_str(&msg.mono_msg, MSG_LIMIT)
+            .into_iter()
+            .peekable();
+        while let Some(paginated_mono_msg) = paginated_mono_msgs.next() {
+            let paginated_mono_msg_trimmed = paginated_mono_msg.trim();
+            // ignore empty messages
+            if paginated_mono_msg_trimmed.is_empty() {
+                continue;
+            }
+            if let Err(e) = self.send_mono_str(paginated_mono_msg_trimmed).await {
+                eprintln!("Error sending mono message: {:?}", e);
+            };
+            println!("sent message");
+            // wait between sending messages
+            if paginated_mono_msgs.peek().is_some() {
+                sleep(TIME_BETWEEN_MESSAGES).await;
+            }
+        }
 
-        println!("Send: {:?}", result.is_ok());
+        if !msg.tags.is_empty() {
+            sleep(TIME_BETWEEN_MESSAGES).await;
+            if let Err(e) = self
+                .send_unformatted_str(
+                    &msg.tags
+                        .clone()
+                        .into_iter()
+                        .collect::<Vec<String>>()
+                        .join(" "),
+                )
+                .await
+            {
+                eprintln!("Error sending tags {:?}: {:?}", msg.tags, e);
+            };
+        }
     }
 
     fn get_name(&self) -> &str {
+        // TODO: use human readable name, not telephone number
         self.account_name.as_str()
     }
 
@@ -206,11 +285,17 @@ impl MessagableBot for SignalBot {
 }
 
 impl PollableBot for SignalBot {
-    async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i32> {
-        panic!("implement");
+    /// the question and options may not be longer than some 2000 bytes combined
+    async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i64> {
+        let msg = question.to_string()
+            + "\n\n"
+            + &options.into_iter().collect::<Vec<String>>().join("\n");
+
+        self.send_mono_str(&msg).await
     }
 
-    async fn stop_poll(&mut self, poll_id: i32) -> Result<Vec<(String, u32)>> {
-        panic!("implement");
+    async fn stop_poll(&mut self, poll_id: i64) -> Result<Vec<(String, u32)>> {
+        // this appears to require persistent storage, requiring changing the database scheme
+        bail!("stopping polls isn't implemented for Signal")
     }
 }

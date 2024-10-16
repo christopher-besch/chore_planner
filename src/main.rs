@@ -1,6 +1,7 @@
 mod bot;
 mod command;
 mod db;
+mod paginate;
 mod signal_bot;
 mod telegram_bot;
 mod test_bot;
@@ -16,6 +17,7 @@ use bot::BotProtocol;
 use bot::ReplyMsg;
 use chrono::Local;
 use command::{handle_next_msg, weekly_action};
+use std::net::SocketAddr;
 use std::{collections::HashSet, env};
 use teloxide::types::ChatId;
 use tokio::signal::unix::{signal, SignalKind};
@@ -135,14 +137,24 @@ async fn initialize_and_run() {
                 .context("failed to convert SIGNAL_DO_LINK to bool")
                 .unwrap();
             let endpoint = env::var("SIGNAL_CLI_ENDPOINT")
-                .expect("the environment variable SIGNAL_CLI_ENDPOINT must be provided");
+                .expect("the environment variable SIGNAL_CLI_ENDPOINT must be provided")
+                .parse::<SocketAddr>()
+                .context("failed to convert SIGNAL_CLI_ENDPOINT to SocketAddr")
+                .unwrap();
             let group_id = env::var("SIGNAL_GROUP_ID")
                 .expect("the environment variable SIGNAL_GROUP_ID must be provided");
             let account_name = env::var("SIGNAL_ACCOUNT_NAME")
                 .expect("the environment variable SIGNAL_ACCOUNT_NAME must be provided");
 
-            panic!("TODO: implement");
-            // run_loop(db, bot).await;
+            let bot = SignalBotBuilder::new()
+                .account_name(account_name)
+                .endpoint(endpoint)
+                .group_id(group_id)
+                .do_register(do_register)
+                .do_link(do_link)
+                .build()
+                .await;
+            run_loop(db, bot).await;
         }
     }
 }
@@ -150,30 +162,50 @@ async fn initialize_and_run() {
 #[tokio::main]
 async fn main() {
     // TODO: remove
-    println!("creating bot");
-    let mut b = SignalBotBuilder::new()
-        .account_name("Test".to_string())
-        .endpoint("127.0.0.1:42069".parse().unwrap())
-        .group_id("Wbvq4+oxG9b+RY619QbRMLyffm4pPOTqmMJJlOWYoYs=".to_string())
-        .build()
-        .await;
-    println!("send msg");
-    b.send_msg(Ok(ReplyMsg {
-        mono_msg: "Test123".to_string(),
-        tags: HashSet::new(),
-    }))
-    .await;
+    // println!("creating bot");
+    // let mut b = SignalBotBuilder::new()
+    //     .account_name("Test".to_string())
+    //     .endpoint("127.0.0.1:42069".parse().unwrap())
+    //     .group_id("Wbvq4+oxG9b+RY619QbRMLyffm4pPOTqmMJJlOWYoYs=".to_string())
+    //     .build()
+    //     .await;
+    // println!("send msg");
+    // b.send_msg(Ok(ReplyMsg {
+    //     mono_msg: "This is a long text with some emojis!\n😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀hihi".to_string(),
+    //     tags: vec!["@Selina".to_string(), "@Jonas".to_string()]
+    //         .into_iter()
+    //         .collect(),
+    // }))
+    // .await;
 
-    println!("receive");
-    loop {
-        let msg = b.next_msg().await;
-        if let Some(msg) = msg {
-            println!("{}", msg);
-        }
-    }
+    // println!("send poll");
+    // pub const RATING_OPTIONS: [&str; 5] = [
+    //     "1  😢  You didn't do anything.",
+    //     "2  👎  Barely noticeable.",
+    //     "3  😮  Acceptable.",
+    //     "4  👍  Well done.",
+    //     "5  ❤️  Perfect!",
+    // ];
+    // b.send_poll(
+    //     &format!(
+    //         "How well did {} do the {} on {}?",
+    //         "Chris", "Spüldienst", "32/2024"
+    //     ),
+    //     RATING_OPTIONS.iter().map(|r| r.to_string()).collect(),
+    // )
+    // .await
+    // .unwrap();
 
-    b.shutdown().await;
-    return;
+    // println!("receive");
+    // loop {
+    //     let msg = b.next_msg().await;
+    //     if let Some(msg) = msg {
+    //         println!("{}", msg);
+    //     }
+    // }
+
+    // b.shutdown().await;
+    // return;
 
     // TODO: ASCII art splash screen
     initialize_and_run().await;
