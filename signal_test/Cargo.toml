@@ -1,0 +1,15 @@
+[package]
+name = "signal_test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.89"
+bytes = "1.7.2"
+futures-util = "0.3.31"
+jsonrpsee = { version = "0.24.6", features = ["async-client", "http-client", "jsonrpsee-proc-macros", "tracing"] }
+serde = "1.0.210"
+serde_json = "1.0.128"
+thiserror = "1.0.64"
+tokio = { version = "1.40.0", features = ["full"] }
+tokio-util = { version = "0.7.12", features = ["codec"] }
