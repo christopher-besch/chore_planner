@@ -1,6 +1,7 @@
 mod bot;
 mod command;
 mod db;
+mod signal_bot;
 mod telegram_bot;
 mod test_bot;
 mod week;
@@ -10,14 +11,51 @@ use crate::{
 };
 
 use anyhow::Context;
+use bot::BotProtocol;
 use chrono::Local;
 use command::{handle_next_msg, weekly_action};
+use signal_bot::SignalBot;
 use std::env;
 use teloxide::types::ChatId;
 use tokio::signal::unix::{signal, SignalKind};
 
 /// This is the main loop the application runs.
-async fn run_loop<T: MessagableBot + PollableBot>(mut bot: T) {
+async fn run_loop<T: MessagableBot + PollableBot>(mut db: Db, mut bot: T) {
+    let mut sighup_stream = signal(SignalKind::hangup()).unwrap();
+    let mut sigint_stream = signal(SignalKind::interrupt()).unwrap();
+    let mut sigterm_stream = signal(SignalKind::terminate()).unwrap();
+
+    println!("waiting for bot updates");
+    loop {
+        tokio::select! {
+            _ = sigint_stream.recv() => {
+                break;
+            }
+            _ = sigterm_stream.recv() => {
+                break;
+            }
+            _ = sighup_stream.recv() => {
+                weekly_action(&mut db, &mut bot).await;
+            }
+            msg_opt = bot.next_msg() => {
+                if let Some(msg) = msg_opt {
+                    handle_next_msg(&mut db, &mut bot, &msg).await;
+                }
+            }
+        }
+    }
+}
+
+/// Create the database and bot before starting the main application loop.
+///
+/// The bot can't be created by a different function and then passed over as the TelegramBotBuilder may not be
+/// dropped.
+async fn initialize_and_run() {
+    let bot_protocol = env::var("CHORE_PLANNER_CHAT_PROTOCOL")
+        .expect("the environment variable CHORE_PLANNER_CHAT_PROTOCOL must be provided")
+        .parse::<BotProtocol>()
+        .context("failed to convert CHORE_PLANNER_CHAT_PROTOCOL to BotProtocol")
+        .unwrap();
     let debug = env::var("CHORE_PLANNER_DEBUG")
         .expect("the environment variable CHORE_PLANNER_DEBUG must be provided")
         .parse::<bool>()
@@ -50,7 +88,7 @@ async fn run_loop<T: MessagableBot + PollableBot>(mut bot: T) {
     if fallback_to_last_week {
         fallback_week = Week::from_db(fallback_week.db_week() - 1);
     }
-    let mut db = Db::new(
+    let db = Db::new(
         &format!("sqlite://{}", db_path),
         fallback_week,
         weeks_to_plan,
@@ -62,48 +100,55 @@ async fn run_loop<T: MessagableBot + PollableBot>(mut bot: T) {
     .await
     .unwrap();
 
-    let mut sighup_stream = signal(SignalKind::hangup()).unwrap();
-    let mut sigint_stream = signal(SignalKind::interrupt()).unwrap();
-    let mut sigterm_stream = signal(SignalKind::terminate()).unwrap();
+    match bot_protocol {
+        BotProtocol::Telegram => {
+            println!("Creating a Telegram bot");
+            let telegram_bot_token = env::var("TELEGRAM_BOT_TOKEN")
+                .expect("the environment variable TELEGRAM_BOT_TOKEN must be provided");
+            let telegram_chat_id = ChatId(
+                env::var("TELEGRAM_CHAT_ID")
+                    .unwrap_or_else(|_| {
+                        eprintln!("the environment varialbe TELEGRAM_CHAT_ID should be provided");
+                        "0".to_string()
+                    })
+                    .parse::<i64>()
+                    .expect("failed to convert environment variable TELEGRAM_CHAT_ID to i64"),
+            );
+            // the builder may not be deleted as the bot holds a borrow of it
+            let mut bot_builder = TelegramBotBuilder::new()
+                .token(telegram_bot_token)
+                .chat_id(telegram_chat_id);
+            let bot = bot_builder.build().await;
+            run_loop(db, bot).await;
+        }
+        BotProtocol::Signal => {
+            println!("Creating a Signal bot");
+            let do_register = env::var("SIGNAL_DO_REGISTER")
+                .expect("the environment variable SIGNAL_DO_REGISTER must be provided")
+                .parse::<bool>()
+                .context("failed to convert SIGNAL_DO_REGISTER to bool")
+                .unwrap();
+            let do_link = env::var("SIGNAL_DO_LINK")
+                .expect("the environment variable SIGNAL_DO_LINK must be provided")
+                .parse::<bool>()
+                .context("failed to convert SIGNAL_DO_LINK to bool")
+                .unwrap();
+            let endpoint = env::var("SIGNAL_CLI_ENDPOINT")
+                .expect("the environment variable SIGNAL_CLI_ENDPOINT must be provided");
+            let group_id = env::var("SIGNAL_GROUP_ID")
+                .expect("the environment variable SIGNAL_GROUP_ID must be provided");
+            let account_name = env::var("SIGNAL_ACCOUNT_NAME")
+                .expect("the environment variable SIGNAL_ACCOUNT_NAME must be provided");
 
-    println!("waiting for bot updates");
-    loop {
-        tokio::select! {
-            _ = sigint_stream.recv() => {
-                break;
-            }
-            _ = sigterm_stream.recv() => {
-                break;
-            }
-            _ = sighup_stream.recv() => {
-                weekly_action(&mut db, &mut bot).await;
-            }
-            msg_opt = bot.next_msg() => {
-                if let Some(msg) = msg_opt {
-                    handle_next_msg(&mut db, &mut bot, &msg).await;
-                }
-            }
+            // TODO: implement
+            let bot = SignalBot {};
+            run_loop(db, bot).await;
         }
     }
 }
 
 #[tokio::main]
 async fn main() {
-    let telegram_bot_token = env::var("TELEGRAM_BOT_TOKEN")
-        .expect("the environment variable TELEGRAM_BOT_TOKEN must be provided");
-    let telegram_chat_id = ChatId(
-        env::var("TELEGRAM_CHAT_ID")
-            .unwrap_or_else(|_| {
-                eprintln!("the environment varialbe TELEGRAM_CHAT_ID should be provided");
-                "0".to_string()
-            })
-            .parse::<i64>()
-            .expect("failed to convert environment variable TELEGRAM_CHAT_ID to i64"),
-    );
-    // the builder may not be deleted as the bot holds a borrow of it
-    let mut bot_builder = TelegramBotBuilder::new()
-        .token(telegram_bot_token)
-        .chat_id(telegram_chat_id);
-    let bot = bot_builder.build().await;
-    run_loop(bot).await;
+    // TODO: ASCII art splash screen
+    initialize_and_run().await;
 }

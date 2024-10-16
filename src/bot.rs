@@ -1,6 +1,7 @@
-use anyhow::Result;
+use anyhow::{bail, Error, Result};
 use std::collections::HashSet;
 use std::ops::{Add, AddAssign};
+use std::str::FromStr;
 
 /// a message the chat bot should write
 #[derive(Debug, PartialEq)]
@@ -64,4 +65,25 @@ pub trait PollableBot {
     async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i32>;
     /// Stop the specified poll and return a list of (option, count_chosen) tuples.
     async fn stop_poll(&mut self, poll_id: i32) -> Result<Vec<(String, u32)>>;
+}
+
+/// the types of protocols the chore_planner supports in production
+///
+/// The TestBot is not made for production and thus not listed.
+pub enum BotProtocol {
+    Telegram,
+    Signal,
+}
+
+impl FromStr for BotProtocol {
+    type Err = Error;
+
+    fn from_str(input: &str) -> Result<BotProtocol, Self::Err> {
+        let lowercase: &str = &input.to_lowercase();
+        match lowercase {
+            "telegram" => Ok(BotProtocol::Telegram),
+            "signal" => Ok(BotProtocol::Signal),
+            _ => bail!("'{lowercase}' is not supported"),
+        }
+    }
 }
