@@ -5,7 +5,6 @@ use jsonrpsee::core::{
 };
 use thiserror::Error;
 
-pub mod ipc;
 mod stream_codec;
 pub mod tcp;
 

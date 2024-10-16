@@ -4,6 +4,7 @@ mod db;
 mod telegram_bot;
 mod test_bot;
 mod week;
+mod signal;
 
 use crate::{
     bot::MessagableBot, bot::PollableBot, db::Db, telegram_bot::TelegramBotBuilder, week::Week,

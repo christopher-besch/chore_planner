@@ -22,3 +22,11 @@ clap = { version = "4.5.17", features = ["derive", "wrap_help"] }
 teloxide = "0.13.0"
 futures-util = "0.3.30"
 openssl = { version = "0.10.66", features = ["vendored"] }
+
+# signal
+jsonrpsee = { version = "0.24.6", features = ["async-client", "http-client", "jsonrpsee-proc-macros", "tracing"] }
+serde = "1.0.210"
+serde_json = "1.0.128"
+tokio-util = { version = "0.7.12", features = ["codec"] }
+bytes = "1.7.2"
+thiserror = "1.0.64"
