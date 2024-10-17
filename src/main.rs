@@ -14,11 +14,10 @@ use crate::{
 
 use anyhow::Context;
 use bot::BotProtocol;
-use bot::ReplyMsg;
 use chrono::Local;
 use command::{handle_next_msg, weekly_action};
+use std::env;
 use std::net::SocketAddr;
-use std::{collections::HashSet, env};
 use teloxide::types::ChatId;
 use tokio::signal::unix::{signal, SignalKind};
 
@@ -47,6 +46,7 @@ async fn run_loop<T: MessagableBot + PollableBot>(mut db: Db, mut bot: T) {
             }
         }
     }
+    bot.shutdown().await;
 }
 
 /// Create the database and bot before starting the main application loop.
@@ -126,16 +126,6 @@ async fn initialize_and_run() {
         }
         BotProtocol::Signal => {
             println!("Creating a Signal bot");
-            let do_register = env::var("SIGNAL_DO_REGISTER")
-                .expect("the environment variable SIGNAL_DO_REGISTER must be provided")
-                .parse::<bool>()
-                .context("failed to convert SIGNAL_DO_REGISTER to bool")
-                .unwrap();
-            let do_link = env::var("SIGNAL_DO_LINK")
-                .expect("the environment variable SIGNAL_DO_LINK must be provided")
-                .parse::<bool>()
-                .context("failed to convert SIGNAL_DO_LINK to bool")
-                .unwrap();
             let endpoint = env::var("SIGNAL_CLI_ENDPOINT")
                 .expect("the environment variable SIGNAL_CLI_ENDPOINT must be provided")
                 .parse::<SocketAddr>()
@@ -145,13 +135,17 @@ async fn initialize_and_run() {
                 .expect("the environment variable SIGNAL_GROUP_ID must be provided");
             let account_name = env::var("SIGNAL_ACCOUNT_NAME")
                 .expect("the environment variable SIGNAL_ACCOUNT_NAME must be provided");
+            let allow_message_from_self = env::var("SIGNAL_ALLOW_MESSAGE_FROM_SELF")
+                .expect("the environment variable SIGNAL_ALLOW_MESSAGE_FROM_SELF must be provided")
+                .parse::<bool>()
+                .context("failed to convert SIGNAL_ALLOW_MESSAGE_FROM_SELF to bool")
+                .unwrap();
 
             let bot = SignalBotBuilder::new()
                 .account_name(account_name)
                 .endpoint(endpoint)
                 .group_id(group_id)
-                .do_register(do_register)
-                .do_link(do_link)
+                .allow_message_from_self(allow_message_from_self)
                 .build()
                 .await;
             run_loop(db, bot).await;

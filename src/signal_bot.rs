@@ -24,14 +24,14 @@ pub struct SignalBotBuilder {
     endpoint: Option<SocketAddr>,
     group_id: Option<String>,
     account_name: Option<String>,
-    do_register: bool,
-    do_link: bool,
+    allow_message_from_self: Option<bool>,
 }
 
 pub struct SignalBot {
     client: Client,
     group_id: String,
     account_name: String,
+    allow_message_from_self: bool,
 
     // None when destructed already
     receive_stream: Option<Subscription<Value>>,
@@ -43,38 +43,34 @@ impl SignalBotBuilder {
             endpoint: None,
             group_id: None,
             account_name: None,
-            do_register: false,
-            do_link: false,
+            allow_message_from_self: None,
         }
     }
 
-    pub fn endpoint(&mut self, endpoint: SocketAddr) -> &mut SignalBotBuilder {
+    pub fn endpoint(mut self, endpoint: SocketAddr) -> SignalBotBuilder {
         self.endpoint = Some(endpoint);
-        return self;
+        self
     }
 
-    pub fn group_id(&mut self, group_id: String) -> &mut SignalBotBuilder {
+    pub fn group_id(mut self, group_id: String) -> SignalBotBuilder {
         self.group_id = Some(group_id);
-        return self;
+        self
     }
 
-    pub fn account_name(&mut self, account_name: String) -> &mut SignalBotBuilder {
+    pub fn account_name(mut self, account_name: String) -> SignalBotBuilder {
         self.account_name = Some(account_name);
-        return self;
+        self
     }
-
-    pub fn do_register(&mut self, do_register: bool) -> &mut SignalBotBuilder {
-        self.do_register = do_register;
-        return self;
-    }
-
-    pub fn do_link(&mut self, do_link: bool) -> &mut SignalBotBuilder {
-        self.do_link = do_link;
-        return self;
+    pub fn allow_message_from_self(
+        &mut self,
+        allow_message_from_self: bool,
+    ) -> &mut SignalBotBuilder {
+        self.allow_message_from_self = Some(allow_message_from_self);
+        self
     }
 
     pub async fn build(&mut self) -> SignalBot {
-        let (sender, receiver) = tcp::connect(self.endpoint.unwrap()).await.unwrap();
+        let (sender, receiver) = tcp::connect(self.endpoint.unwrap()).await.expect("Error: tcp connection to signal-cli failed; maybe start it with something like 'signal-cli daemon --tcp 127.0.0.1:42069'");
         let client = ClientBuilder::default().build_with_tokio(sender, receiver);
         let receive_stream = Some(client.subscribe_receive(None).await.unwrap());
 
@@ -83,6 +79,7 @@ impl SignalBotBuilder {
             receive_stream,
             group_id: self.group_id.clone().unwrap(),
             account_name: self.account_name.clone().unwrap(),
+            allow_message_from_self: self.allow_message_from_self.unwrap(),
         }
     }
 }
@@ -121,6 +118,8 @@ impl SignalBot {
             envelope: Envelope,
         }
 
+        // TODO: remove
+        println!("hihi");
         match serde_json::from_value::<Update>(update.clone()) {
             Ok(update) => {
                 let sent_message = match update.envelope.sync_message {
@@ -130,14 +129,24 @@ impl SignalBot {
                         None => return None,
                     },
                 };
-                // TODO: enable this again after testing is done
-                // if update.account != self.account_name {
-                //     return None;
-                // }
-                // if update.envelope.source_number == self.account_name {
-                //     return None;
-                // }
+                if update.account != self.account_name {
+                    eprintln!("ignoring message ment for account: {}", update.account);
+                    return None;
+                }
+                if !self.allow_message_from_self
+                    && update.envelope.source_number == self.account_name
+                {
+                    eprintln!(
+                        "ignoring message from bot account: {}",
+                        update.envelope.source_number
+                    );
+                    return None;
+                }
                 if sent_message.group_info.group_id != self.group_id {
+                    eprintln!(
+                        "ignoring new group with group_id: {}",
+                        sent_message.group_info.group_id
+                    );
                     return None;
                 }
                 Some(sent_message.message)
@@ -158,33 +167,15 @@ impl SignalBot {
         self.send_raw_str(msg, vec![]).await
     }
     async fn send_raw_str(&self, msg: &str, format: Vec<String>) -> Result<i64> {
-        // may the rust gods have mercy with this API
         let result = self
             .client
             .send(
-                None,
                 vec![],
                 vec![self.group_id.clone()],
-                false,
-                false,
                 msg.to_string(),
                 vec![],
                 vec![],
                 format,
-                None,
-                None,
-                None,
-                vec![],
-                vec![],
-                vec![],
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
             )
             .await?;
 
@@ -214,6 +205,10 @@ impl SignalBot {
 
 impl MessagableBot for SignalBot {
     async fn next_msg(&mut self) -> Option<String> {
+        // The stream is opened at start. When it is closed here, the chore_planner can no longer
+        // function and needs to be restarted.
+        // TODO: remove
+        println!("awaiting");
         let stream = self.receive_stream.as_mut().unwrap();
         let update = stream.next().await;
         match update {
@@ -278,7 +273,8 @@ impl MessagableBot for SignalBot {
 
     // this can't be implemented in the drop function as it is async
     async fn shutdown(&mut self) {
-        let stream = std::mem::replace(&mut self.receive_stream, None).unwrap();
+        // We're shutting down the chore_planner now anyways.
+        let stream = Option::take(&mut self.receive_stream).unwrap();
         stream.unsubscribe().await.unwrap();
         println!("closed Signal receive stream");
     }
@@ -294,7 +290,7 @@ impl PollableBot for SignalBot {
         self.send_mono_str(&msg).await
     }
 
-    async fn stop_poll(&mut self, poll_id: i64) -> Result<Vec<(String, u32)>> {
+    async fn stop_poll(&mut self, _poll_id: i64) -> Result<Vec<(String, u32)>> {
         // this appears to require persistent storage, requiring changing the database scheme
         bail!("stopping polls isn't implemented for Signal")
     }
