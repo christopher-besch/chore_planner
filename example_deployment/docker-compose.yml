@@ -96,4 +96,3 @@ services:
 # only needed when using signal
 networks:
     signal-net:
-        internal: true
