@@ -1,4 +1,7 @@
-use crate::bot::{MessagableBot, PollableBot, ReplyMsg};
+use crate::{
+    bot::{MessagableBot, PollableBot, ReplyMsg},
+    paginate::paginate_str,
+};
 
 use anyhow::{bail, Result};
 use futures_util::stream::StreamExt;
@@ -108,42 +111,6 @@ impl<'a> TelegramBot<'a> {
             _ => None,
         }
     }
-
-    /// Split big messages into multiple.
-    fn paginate_mono_msg(msg: &str) -> Vec<String> {
-        // telegrams limit is 4096 but let's leave some padding
-        const MSG_LIMIT: usize = 4050;
-
-        let lines = msg.split('\n');
-        let mut paged_mono: Vec<String> = vec![];
-        for line in lines {
-            // Can we still fit the new line into the last message?
-            if let Some(last_paged_mono) = paged_mono.last_mut() {
-                if last_paged_mono.len() + 1 + line.len() <= MSG_LIMIT {
-                    last_paged_mono.push('\n');
-                    last_paged_mono.push_str(line);
-                    continue;
-                }
-            }
-            // Can the line fit into its own message?
-            if line.len() <= MSG_LIMIT {
-                paged_mono.push(line.to_string());
-                continue;
-            }
-            // The line must be split into multiple messages.
-            eprintln!("Error: ignored too long line");
-
-            // TODO: split into multiple messages
-            // This code is not utf-8 safe and might panic.
-            // let mut cur_line = line.to_string();
-            // while !cur_line.is_empty() {
-            //     let (chunk, rest) = cur_line.split_at(std::cmp::min(cur_line.len(), MSG_LIMIT));
-            //     paged_mono.push(chunk.to_string());
-            //     cur_line = rest.to_string();
-            // }
-        }
-        paged_mono
-    }
 }
 
 impl<'a> MessagableBot for TelegramBot<'a> {
@@ -161,13 +128,15 @@ impl<'a> MessagableBot for TelegramBot<'a> {
 
     async fn send_msg(&mut self, msg: Result<ReplyMsg>) {
         const TIME_BETWEEN_MESSAGES: Duration = Duration::from_millis(500);
+        // telegrams limit is 4096 but let's leave some padding
+        const MSG_LIMIT: usize = 4050;
 
         let msg = msg.unwrap_or_else(|e| {
             eprintln!("sending error: {:?}", e);
             ReplyMsg::from_mono(&e.to_string())
         });
 
-        let mut paginated_mono_msgs = Self::paginate_mono_msg(&msg.mono_msg)
+        let mut paginated_mono_msgs = paginate_str(&msg.mono_msg, MSG_LIMIT)
             .into_iter()
             .peekable();
         while let Some(paginated_mono_msg) = paginated_mono_msgs.next() {
@@ -214,22 +183,27 @@ impl<'a> MessagableBot for TelegramBot<'a> {
     fn get_name(&self) -> &str {
         &self.bot_username
     }
+
+    async fn shutdown(&mut self) {}
 }
 
 impl<'a> PollableBot for TelegramBot<'a> {
-    async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i32> {
+    async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i64> {
         let msg = <TeloxideBot as Requester>::send_poll(&self.bot, self.chat_id, question, options)
             .allows_multiple_answers(false)
             .is_anonymous(true)
             .await?;
         println!("created poll {}", msg.id.0);
-        Ok(msg.id.0)
+        Ok(msg.id.0.into())
     }
 
-    async fn stop_poll(&mut self, poll_id: i32) -> Result<Vec<(String, u32)>> {
-        let poll =
-            <TeloxideBot as Requester>::stop_poll(&self.bot, self.chat_id, MessageId(poll_id))
-                .await?;
+    async fn stop_poll(&mut self, poll_id: i64) -> Result<Vec<(String, u32)>> {
+        let poll = <TeloxideBot as Requester>::stop_poll(
+            &self.bot,
+            self.chat_id,
+            MessageId(poll_id.try_into()?),
+        )
+        .await?;
         if !poll.is_closed {
             bail!("the poll failed to close");
         }

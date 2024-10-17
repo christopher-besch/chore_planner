@@ -1,12 +1,15 @@
 services:
     ChorePlanner:
-        image: "chrisbesch/chore_planner"
+        image: "chrisbesch/chore_planner:2.0.0"
         container_name: "ChorePlanner"
 
         volumes:
             - "./data:/var/run/data"
 
         environment:
+            ####################
+            # Generel Settings #
+            ####################
             CHORE_PLANNER_DB_PATH: /var/run/data/chore_planner.sqlite
             # This advances the current week to the next every time the weekly action is performed.
             # set to true for actual deployment
@@ -34,17 +37,65 @@ services:
             # Busy tenants are those already doing a chore the last, this or the next week.
             # If you want to prevent the same tenant doing two chores in the same week, enable this.
             CHORE_PLANNER_TRY_EXCLUDE_BUSY_TENANTS: true
+            # When should the weekly action be performed?
+            # This environment variable is understood by the docker_cron container
+            CRON_TIME: "0,30 6 * * *"
+            # One of:
+            #   Signal
+            #   Telegram
+            CHORE_PLANNER_CHAT_PROTOCOL: $CHORE_PLANNER_CHAT_PROTOCOL
+
+            #####################
+            # Telegram Settings #
+            #####################
             # the token of the telegram bot
             TELEGRAM_BOT_TOKEN: $TELEGRAM_BOT_TOKEN
             # the id of the chat the bot should listen on
+            # Set this to a random value if you don't know your id yet.
+            # You'll get an error message telling you the chat_id when the bot receives a new message.
             TELEGRAM_CHAT_ID: $TELEGRAM_CHAT_ID
-            # When should the weekly action be performed?
-            CRON_TIME: "0,30 6 * * *"
 
+            ###################
+            # Signal Settings #
+            ###################
+            SIGNAL_CLI_ENDPOINT: signalcli:42069
+            # the id of the group the bot should listen on
+            # Set this to a random value if you don't know your id yet.
+            # You'll get an error message telling you the chat_id when the bot receives a new message.
+            SIGNAL_GROUP_ID: $SIGNAL_GROUP_ID
+            # the telephone number of the bot
+            # This needs to start with the country code and may not contain spaces.
+            SIGNAL_ACCOUNT_NAME: $SIGNAL_ACCOUNT_NAME
+            # the name that others will see and use to tag the bot
+            # This name must not container spaces or quotes
+            SIGNAL_DISPLAY_NAME: "@chore_planner_bot"
+            # Should the bot listen to messages from the same number it is registered under?
+            # This is useful for testing and when you link your personal number to the bot.
+            SIGNAL_ALLOW_MESSAGE_FROM_SELF: true
+
+        # only needed when using signal
+        networks: ["signal-net"]
+        restart: "unless-stopped"
+
+    # only needed when using signal
+    SignalCli:
+        image: registry.gitlab.com/packaging/signal-cli/signal-cli-native
+        container_name: SignalCli
+        command: --config /var/lib/signal-cli daemon --tcp 0.0.0.0:42069
+        user: root
+        volumes:
+            - "./signal_cli:/var/lib/signal-cli"
+        tmpfs:
+            - "/tmp:exec"
+        networks: ["signal-net"]
         restart: "unless-stopped"
 
     DockerCron:
         image: chrisbesch/docker_cron
         volumes:
             - "/var/run/docker.sock:/var/run/docker.sock:rw"
+        restart: "unless-stopped"
 
+# only needed when using signal
+networks:
+    signal-net:
