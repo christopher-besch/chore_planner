@@ -32,3 +32,4 @@ chore_planner.sqlite
 chore_planner.sqlite.bak
 
 example_deployment/signal_cli/
+example_deployment/signal_cli.bak/

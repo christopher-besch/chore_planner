@@ -17,9 +17,11 @@ use bot::BotProtocol;
 use chrono::Local;
 use command::{handle_next_msg, weekly_action};
 use std::env;
-use std::net::SocketAddr;
+use std::net::ToSocketAddrs;
+use std::time::Duration;
 use teloxide::types::ChatId;
 use tokio::signal::unix::{signal, SignalKind};
+use tokio::time::sleep;
 
 /// This is the main loop the application runs.
 async fn run_loop<T: MessagableBot + PollableBot>(mut db: Db, mut bot: T) {
@@ -111,7 +113,7 @@ async fn initialize_and_run() {
             let telegram_chat_id = ChatId(
                 env::var("TELEGRAM_CHAT_ID")
                     .unwrap_or_else(|_| {
-                        eprintln!("the environment varialbe TELEGRAM_CHAT_ID should be provided");
+                        eprintln!("the environment variable TELEGRAM_CHAT_ID should be provided");
                         "0".to_string()
                     })
                     .parse::<i64>()
@@ -128,9 +130,13 @@ async fn initialize_and_run() {
             println!("Creating a Signal bot");
             let endpoint = env::var("SIGNAL_CLI_ENDPOINT")
                 .expect("the environment variable SIGNAL_CLI_ENDPOINT must be provided")
-                .parse::<SocketAddr>()
+                .to_socket_addrs()
                 .context("failed to convert SIGNAL_CLI_ENDPOINT to SocketAddr")
+                .unwrap()
+                .next()
+                .context("failed to find any ip address for SIGNAL_CLI_ENDPOINT via DNS")
                 .unwrap();
+            println!("using endpoint: {endpoint}");
             let group_id = env::var("SIGNAL_GROUP_ID")
                 .expect("the environment variable SIGNAL_GROUP_ID must be provided");
             let account_name = env::var("SIGNAL_ACCOUNT_NAME")
@@ -141,6 +147,8 @@ async fn initialize_and_run() {
                 .context("failed to convert SIGNAL_ALLOW_MESSAGE_FROM_SELF to bool")
                 .unwrap();
 
+            println!("waiting 10sec to let signal-cli boot up");
+            sleep(Duration::from_secs(10)).await;
             let bot = SignalBotBuilder::new()
                 .account_name(account_name)
                 .endpoint(endpoint)

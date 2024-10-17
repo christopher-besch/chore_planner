@@ -1,6 +1,6 @@
 services:
     ChorePlanner:
-        image: "chrisbesch/chore_planner:1.1.0"
+        image: "chrisbesch/chore_planner:2.0.0"
         container_name: "ChorePlanner"
 
         volumes:
@@ -58,7 +58,7 @@ services:
             ###################
             # Signal Settings #
             ###################
-            SIGNAL_CLI_ENDPOINT: SignalCli:42069
+            SIGNAL_CLI_ENDPOINT: signalcli:42069
             # the id of the group the bot should listen on
             # Set this to a random value if you don't know your id yet.
             # You'll get an error message telling you the chat_id when the bot receives a new message.
