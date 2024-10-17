@@ -141,6 +141,8 @@ async fn initialize_and_run() {
                 .expect("the environment variable SIGNAL_GROUP_ID must be provided");
             let account_name = env::var("SIGNAL_ACCOUNT_NAME")
                 .expect("the environment variable SIGNAL_ACCOUNT_NAME must be provided");
+            let display_name = env::var("SIGNAL_DISPLAY_NAME")
+                .expect("the environment variable SIGNAL_DISPLAY_NAME must be provided");
             let allow_message_from_self = env::var("SIGNAL_ALLOW_MESSAGE_FROM_SELF")
                 .expect("the environment variable SIGNAL_ALLOW_MESSAGE_FROM_SELF must be provided")
                 .parse::<bool>()
@@ -151,6 +153,7 @@ async fn initialize_and_run() {
             sleep(Duration::from_secs(10)).await;
             let bot = SignalBotBuilder::new()
                 .account_name(account_name)
+                .display_name(display_name)
                 .endpoint(endpoint)
                 .group_id(group_id)
                 .allow_message_from_self(allow_message_from_self)

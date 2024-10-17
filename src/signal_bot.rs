@@ -24,6 +24,7 @@ pub struct SignalBotBuilder {
     endpoint: Option<SocketAddr>,
     group_id: Option<String>,
     account_name: Option<String>,
+    display_name: Option<String>,
     allow_message_from_self: Option<bool>,
 }
 
@@ -31,6 +32,7 @@ pub struct SignalBot {
     client: Client,
     group_id: String,
     account_name: String,
+    display_name: String,
     allow_message_from_self: bool,
 
     // None when destructed already
@@ -43,6 +45,7 @@ impl SignalBotBuilder {
             endpoint: None,
             group_id: None,
             account_name: None,
+            display_name: None,
             allow_message_from_self: None,
         }
     }
@@ -61,6 +64,12 @@ impl SignalBotBuilder {
         self.account_name = Some(account_name);
         self
     }
+
+    pub fn display_name(mut self, display_name: String) -> SignalBotBuilder {
+        self.display_name = Some(display_name);
+        self
+    }
+
     pub fn allow_message_from_self(
         &mut self,
         allow_message_from_self: bool,
@@ -79,6 +88,7 @@ impl SignalBotBuilder {
             receive_stream,
             group_id: self.group_id.clone().unwrap(),
             account_name: self.account_name.clone().unwrap(),
+            display_name: self.display_name.clone().unwrap(),
             allow_message_from_self: self.allow_message_from_self.unwrap(),
         }
     }
@@ -267,8 +277,7 @@ impl MessagableBot for SignalBot {
     }
 
     fn get_name(&self) -> &str {
-        // TODO: use human readable name, not telephone number
-        self.account_name.as_str()
+        self.display_name.as_str()
     }
 
     // this can't be implemented in the drop function as it is async

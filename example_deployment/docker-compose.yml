@@ -66,6 +66,8 @@ services:
             # the telephone number of the bot
             # This needs to start with the country code and may not contain spaces.
             SIGNAL_ACCOUNT_NAME: $SIGNAL_ACCOUNT_NAME
+            # the name that others will see and use to tag the bot
+            SIGNAL_DISPLAY_NAME: @Chore Planner Bot
             # Should the bot listen to messages from the same number it is registered under?
             # This is useful for testing and when you link your personal number to the bot.
             SIGNAL_ALLOW_MESSAGE_FROM_SELF: true
