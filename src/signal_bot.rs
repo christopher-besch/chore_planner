@@ -203,7 +203,16 @@ impl SignalBot {
                     );
                     return None;
                 }
-                Some(sent_message.message)
+                let pos = match sent_message.message.find(" ") {
+                    Some(pos) => pos,
+                    None => {
+                        eprintln!("there is no space in: {}", sent_message.message);
+                        return None;
+                    }
+                };
+                let mut cmd_message = sent_message.message;
+                cmd_message.replace_range(0..pos, &self.display_name);
+                Some(cmd_message)
             }
             Err(e) => {
                 println!("Warning to ignore: {e:?}\n{update:#?}");

@@ -11,6 +11,10 @@ way of handling your chores.
 
 The chore_planner supports complex chore and exemption structures **fairly** assigning tenants in a way you can **trust**.
 
+# Currently Supported Chat Protocols
+- Telegram (primary protocol with best support)
+- Signal
+
 # Weekly Action
 https://github.com/user-attachments/assets/e46e64ad-d43b-473f-8171-3fdebad0fc38
 
