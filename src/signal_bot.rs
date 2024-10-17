@@ -96,16 +96,53 @@ impl SignalBotBuilder {
 
 impl SignalBot {
     fn parse_update(&mut self, update: Value) -> Option<String> {
+        // example message from someone else
+        // Object {
+        //     "account": String("+491717171717"),
+        //     "envelope": Object {
+        //         "dataMessage": Object {
+        //             "expiresInSeconds": Number(0),
+        //             "groupInfo": Object {
+        //                 "groupId": String("Wbvq4+oxG9b+RY619QbRMLyffm4pPOTqmMJJlOWYoYs="),
+        //                 "type": String("DELIVER"),
+        //             },
+        //             "mentions": Array [
+        //                 Object {
+        //                     "length": Number(1),
+        //                     "name": String("+491717171717"),
+        //                     "number": String("+491717171717"),
+        //                     "start": Number(0),
+        //                     "uuid": String("d53a76a6-b318-f4865e69b774"),
+        //                 },
+        //             ],
+        //             "message": String("￼  some message"),
+        //             "timestamp": Number(1729171912889),
+        //             "viewOnce": Bool(false),
+        //         },
+        //         "source": String("+491717171717"),
+        //         "sourceDevice": Number(1),
+        //         "sourceName": String("Adam Jensen"),
+        //         "sourceNumber": String("+491717181818"),
+        //         "sourceUuid": String("a5f5acf8-ab9e-669d2d93dbfc"),
+        //         "timestamp": Number(1729171912889),
+        //     },
+        // }
         #[derive(Deserialize, Debug)]
         struct GroupInfo {
             #[serde(rename = "groupId")]
             group_id: String,
         }
         #[derive(Deserialize, Debug)]
+        struct Mention {
+            name: Option<String>,
+            number: Option<String>,
+        }
+        #[derive(Deserialize, Debug)]
         struct SentMessage {
             #[serde(rename = "groupInfo")]
             group_info: GroupInfo,
             message: String,
+            mentions: Vec<Mention>,
         }
         #[derive(Deserialize, Debug)]
         struct SyncMessage {
@@ -129,7 +166,7 @@ impl SignalBot {
         }
 
         // TODO: remove
-        println!("hihi");
+        println!("{:#?}", update);
         match serde_json::from_value::<Update>(update.clone()) {
             Ok(update) => {
                 let sent_message = match update.envelope.sync_message {
@@ -152,6 +189,13 @@ impl SignalBot {
                     );
                     return None;
                 }
+                if !sent_message.mentions.into_iter().any(|m| {
+                    m.number == Some(self.account_name.clone())
+                        || m.name == Some(self.account_name.clone())
+                }) {
+                    eprintln!("ignoring message that doesn't mention the bot");
+                    return None;
+                }
                 if sent_message.group_info.group_id != self.group_id {
                     eprintln!(
                         "ignoring new group with group_id: {}",
@@ -162,7 +206,7 @@ impl SignalBot {
                 Some(sent_message.message)
             }
             Err(e) => {
-                println!("Warning: {e:?}\n{update:#?}");
+                println!("Warning to ignore: {e:?}\n{update:#?}");
                 None
             }
         }
@@ -217,8 +261,6 @@ impl MessagableBot for SignalBot {
     async fn next_msg(&mut self) -> Option<String> {
         // The stream is opened at start. When it is closed here, the chore_planner can no longer
         // function and needs to be restarted.
-        // TODO: remove
-        println!("awaiting");
         let stream = self.receive_stream.as_mut().unwrap();
         let update = stream.next().await;
         match update {
