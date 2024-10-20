@@ -146,3 +146,19 @@ A new chat integration like Discord or Matrix only needs to implement the `Messa
 # Testing
 The entire database interaction written in SQL is thoroughly unit tested.
 This ensures the SQL statements do what they're designed to do.
+
+# Building Multiarch Docker Image
+The Dockerfile can build amd64 and arm64 images.
+Build them with (2.0.0 example):
+
+```
+docker build --build-arg TARGETARCH=amd64 -t chrisbesch/chore_planner:2.0.0_amd64 . &&
+docker build --build-arg TARGETARCH=arm64 -t chrisbesch/chore_planner:2.0.0_arm64 . &&
+docker push chrisbesch/chore_planner:2.0.0_amd64 &&
+docker push chrisbesch/chore_planner:2.0.0_arm64 &&
+docker manifest create chrisbesch/chore_planner:2.0.0 \
+    chrisbesch/chore_planner:2.0.0_amd64 \
+    chrisbesch/chore_planner:2.0.0_arm64 &&
+docker manifest inspect chrisbesch/chore_planner:2.0.0 &&
+docker manifest push chrisbesch/chore_planner:2.0.0
+```

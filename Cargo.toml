@@ -4,6 +4,10 @@ version = "2.0.0"
 authors = ["Christopher Besch <mail@chris-besch.com>"]
 edition = "2021"
 
+[[bin]]
+name = "chore_planner"
+path = "src/main.rs"
+
 [dependencies]
 tokio = { version = "1.40.0", features = ["full"] }
 anyhow = "1.0.87"
@@ -19,7 +23,9 @@ shellwords = "1.1.0"
 clap = { version = "4.5.17", features = ["derive", "wrap_help"] }
 
 # telegram
-teloxide = "0.13.0"
+# Use rustls instead of openssl.
+# This makes cross compiling easier.
+teloxide = { version = "0.13.0", default-features = false, features = ["rustls"] }
 futures-util = "0.3.30"
 
 # signal
