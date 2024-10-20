@@ -4,12 +4,16 @@ Chat Bot scheduling your Shared Apartment's Chores.
 Simply add it to your group chat to have an
 - **unintrusive** (no one has to install an app, create an account or even open a website),
 - **easy to administrate** (with an easy to use chat command interface),
-- **platform-independent** (implementing other chats than Telegram is easy) and
+- **platform-independent** (implementing other chats protocols is easy) and
 - **privacy friendly** (your data is stored on your server and nowhere else)
 
 way of handling your chores.
 
 The chore_planner supports complex chore and exemption structures **fairly** assigning tenants in a way you can **trust**.
+
+# Currently Supported Chat Protocols
+- Telegram
+- Signal (Tagging and Polls not supported)
 
 # Weekly Action
 https://github.com/user-attachments/assets/e46e64ad-d43b-473f-8171-3fdebad0fc38
@@ -99,10 +103,25 @@ Though you can host the chore_planner directly on your server, the easier approa
 See [the example docker-compose.yml](example_deployment/docker-compose.yml) for an explanation of all configuration options.
 This uses the [docker_cron container](https://github.com/christopher-besch/docker_cron) to send a [SIGHUP](https://en.wikipedia.org/wiki/SIGHUP) to trigger the [weekly action](#weekly-action).
 
-To test the chore_planner [create a telegram bot](https://core.telegram.org/bots), disable [the bot's privacy mode](https://core.telegram.org/bots/features#privacy-mode) and start the chore_planner with `TELEGRAM_CHAT_ID=your_id TELEGRAM_BOT_TOKEN=your_token docker compose up` in the example_deployment directory.
+## Telegram
+To test the chore_planner [create a telegram bot](https://core.telegram.org/bots), disable [the bot's privacy mode](https://core.telegram.org/bots/features#privacy-mode) and start the chore_planner with `CHORE_PLANNER_CHAT_PROTOCOL=Telegram TELEGRAM_CHAT_ID=your_id TELEGRAM_BOT_TOKEN=your_token docker compose up` in the example_deployment directory.
 You can figure out your chat's id by setting a random value, sending some message to your chat and looking at the chore_planner's log.
 
 For an ansible setup see [github.com/christopher-besch/docker_setups](https://github.com/christopher-besch/docker_setups/tree/main/ansible/playbook/roles/docker_chore_planner).
+
+## Signal
+Signal doesn't have good bot support so expect the deployment process to be a less pleasant one.
+The chore_planner uses the [signal-cli](https://github.com/AsamK/signal-cli), which needs to be installed on the host or (preferably) in another docker container.
+
+First you have to [register](https://github.com/AsamK/signal-cli/wiki/Registration-with-captcha) or [link](https://github.com/AsamK/signal-cli/wiki/Linking-other-devices-%28Provisioning%29) the signal-cli to a Signal account.
+Do that on your host or in a docker container with the [docker image](https://github.com/AsamK/signal-cli/wiki/Binary-distributions#docker).
+Don't forget you need a new telephone number for the registration.
+Your setup is stored in `/var/lib/signal-cli`—copy that directory to someplace secure, you'll need to mount it in the production signal-cli container.
+
+You can just run `docker run --rm --user root -ti -v ./example_deployment/signal_cli:/var/lib/signal-cli --entrypoint /bin/bash registry.gitlab.com/packaging/signal-cli/signal-cli-native` and perform the registration/linking there.
+Adjust all signal-cli commands to use `--config /var/lib/signal-cli`, so for example `signal-cli --config /var/lib/signal-cli link`.
+
+To test the chore_planner with Signal place your signal-cli setup in `example_deployment/signal_cli` and start the chore_planner with `CHORE_PLANNER_CHAT_PROTOCOL=Signal SIGNAL_GROUP_ID=your_id SIGNAL_ACCOUNT_NAME=your_bots_phone_number docker compose up` in the example_deployment directory.
 
 # Database Structure
 All data is stored in the database removing the risk of crashes.
@@ -121,7 +140,7 @@ Instead of storing the scores directly they are calculated every time they are n
 This creates a single source of truth.
 
 # Extensibility
-Though only Telegram is supported for now, the chore_planner is designed with extensibility in mind.
+Though only Telegram and Signal is supported for now, the chore_planner is designed with extensibility in mind.
 A new chat integration like Discord or Matrix only needs to implement the `MessagableBot` and optionally the `PollableBot` trait from src/bot.rs.
 
 # Testing

@@ -1,6 +1,6 @@
 [package]
 name = "chore_planner"
-version = "1.1.0"
+version = "2.0.0"
 authors = ["Christopher Besch <mail@chris-besch.com>"]
 edition = "2021"
 
@@ -21,4 +21,11 @@ clap = { version = "4.5.17", features = ["derive", "wrap_help"] }
 # telegram
 teloxide = "0.13.0"
 futures-util = "0.3.30"
-openssl = { version = "0.10.66", features = ["vendored"] }
+
+# signal
+jsonrpsee = { version = "0.24.6", features = ["async-client", "http-client", "jsonrpsee-proc-macros", "tracing"] }
+serde = "1.0.210"
+serde_json = "1.0.128"
+tokio-util = { version = "0.7.12", features = ["codec"] }
+bytes = "1.7.2"
+thiserror = "1.0.64"

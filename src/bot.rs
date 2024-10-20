@@ -1,6 +1,7 @@
-use anyhow::Result;
+use anyhow::{bail, Error, Result};
 use std::collections::HashSet;
 use std::ops::{Add, AddAssign};
+use std::str::FromStr;
 
 /// a message the chat bot should write
 #[derive(Debug, PartialEq)]
@@ -55,13 +56,39 @@ pub trait MessagableBot {
     async fn send_msg(&mut self, msg: Result<ReplyMsg>);
     /// Get the name of the bot i.e., the prefix of all accepted received messages.
     fn get_name(&self) -> &str;
+
+    // This needs to be called once the bot isn't used any longer.
+    //
+    // This can't be implemented in the drop function as it is async.
+    async fn shutdown(&mut self);
 }
 
 /// a bot that supports creating polls
 pub trait PollableBot {
     /// Create a new poll with a question and list of options.
     /// Return the identifier of this poll.
-    async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i32>;
+    async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i64>;
     /// Stop the specified poll and return a list of (option, count_chosen) tuples.
-    async fn stop_poll(&mut self, poll_id: i32) -> Result<Vec<(String, u32)>>;
+    async fn stop_poll(&mut self, poll_id: i64) -> Result<Vec<(String, u32)>>;
+}
+
+/// the types of protocols the chore_planner supports in production
+///
+/// The TestBot is not made for production and thus not listed.
+pub enum BotProtocol {
+    Telegram,
+    Signal,
+}
+
+impl FromStr for BotProtocol {
+    type Err = Error;
+
+    fn from_str(input: &str) -> Result<BotProtocol, Self::Err> {
+        let lowercase: &str = &input.to_lowercase();
+        match lowercase {
+            "telegram" => Ok(BotProtocol::Telegram),
+            "signal" => Ok(BotProtocol::Signal),
+            _ => bail!("chat protocol '{lowercase}' is not supported"),
+        }
+    }
 }

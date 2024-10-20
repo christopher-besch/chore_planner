@@ -58,6 +58,8 @@ impl<
     fn get_name(&self) -> &str {
         "hihi_im_a_test"
     }
+
+    async fn shutdown(&mut self) {}
 }
 
 impl<
@@ -65,15 +67,15 @@ impl<
         ReplyMsgIterator: Iterator<Item = Result<ReplyMsg>>,
     > PollableBot for TestBot<StringIterator, ReplyMsgIterator>
 {
-    async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i32> {
+    async fn send_poll(&mut self, question: &str, options: Vec<String>) -> Result<i64> {
         let t = self.expected_polls[self.next_poll_id].clone();
         assert_eq!(t, (question.to_string(), options));
         let poll_id = self.next_poll_id;
         self.next_poll_id += 1;
-        Ok(poll_id as i32)
+        Ok(poll_id.try_into()?)
     }
 
-    async fn stop_poll(&mut self, poll_id: i32) -> Result<Vec<(String, u32)>> {
+    async fn stop_poll(&mut self, poll_id: i64) -> Result<Vec<(String, u32)>> {
         Ok(self.to_send_polls[poll_id as usize].clone())
     }
 }

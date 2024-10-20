@@ -3,11 +3,11 @@ use crate::{bot::PollableBot, db::*};
 use anyhow::Context;
 
 pub const RATING_OPTIONS: [&str; 5] = [
-    "1   You didn't do anything.",
-    "2   Barely noticeable.",
-    "3   Acceptable.",
-    "4   Well done.",
-    "5   Perfect!",
+    "1  😢  You didn't do anything.",
+    "2  👎  Barely noticeable.",
+    "3  😮  Acceptable.",
+    "4  👍  Well done.",
+    "5  ❤️  Perfect!",
 ];
 
 impl Db {
@@ -84,8 +84,8 @@ FROM ChoreLog
         self.integrity_check().await?;
         let poll_ids = rows
             .into_iter()
-            .map(|r| -> Result<i32> { Ok(r.try_get(0)?) })
-            .collect::<Result<Vec<i32>>>()?;
+            .map(|r| -> Result<i64> { Ok(r.try_get(0)?) })
+            .collect::<Result<Vec<i64>>>()?;
 
         for poll_id in poll_ids {
             let results = bot.stop_poll(poll_id).await.unwrap_or_else(|e| {
