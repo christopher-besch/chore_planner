@@ -3,6 +3,7 @@ name = "chore_planner"
 version = "2.0.0"
 authors = ["Christopher Besch <mail@chris-besch.com>"]
 edition = "2021"
+license = "AGPL-3.0"
 
 [[bin]]
 name = "chore_planner"
