@@ -144,20 +144,16 @@ JOIN LivesIn
     AND LivesIn.move_in_week <= ?1
     AND (LivesIn.move_out_week IS NULL OR LivesIn.move_out_week > ?1)
 -- ensure tenant doesn't have an exemption
-LEFT JOIN TenantExemption
-    ON TenantExemption.tenant_id = Tenant.id
-    AND TenantExemption.start_week <= ?1
-    AND (TenantExemption.end_week IS NULL OR TenantExemption.end_week > ?1)
--- ensure we only consider exemptions for the chore in question
-LEFT JOIN ChoreExemption
-    ON TenantExemption.exemption_reason_id = ChoreExemption.exemption_reason_id
-    AND ChoreExemption.chore_id = Chore.id
+LEFT JOIN TenantChoreExemption
+    ON TenantChoreExemption.tenant_id = Tenant.id
+    AND TenantChoreExemption.chore_id = Chore.id
+    AND TenantChoreExemption.start_week <= ?1
+    AND (TenantChoreExemption.end_week IS NULL OR TenantChoreExemption.end_week > ?1)
 -- ensure the tenant isn't unwilling for this week
 LEFT JOIN Unwilling
     ON Unwilling.tenant_id = Tenant.id
     AND Unwilling.week = ?1
--- this must be on the LEFT JOIN with ChoreExemption as it is the second LEFT JOIN
-WHERE ChoreExemption.chore_id IS NULL
+WHERE TenantChoreExemption.chore_id IS NULL
 AND Unwilling.tenant_id IS NULL
 AND Chore.name = ?2
 ORDER BY CAST(TenantScore.score AS REAL) ASC;

@@ -205,6 +205,47 @@ CREATE TABLE KeyValue (
 ) STRICT;
 "#,
             // v1.0.0 //
+            r#"
+-- used to find which if a tenant is exempt from a chore
+CREATE VIEW TenantChoreExemption (tenant_id, chore_id, start_week, end_week) AS
+
+SELECT TenantExemption.tenant_id, ChoreExemption.chore_id, TenantExemption.start_week, TenantExemption.end_week
+FROM TenantExemption, ChoreExemption
+WHERE TenantExemption.exemption_reason_id = ChoreExemption.exemption_reason_id;
+"#,
+            r#"
+-- The old ProfitingTenant performed two left joins.
+-- This caused a problem with tenants who have multiple exemptions for different chores.
+-- The old view would simply find the respectively other exemption that is for a chore that isn't the one we're looking for.
+-- Then the tenant would appear un-exempted even though she should be exempted.
+-- We fix this with the TenantChoreExemption and performing a single left join on that.
+DROP VIEW ProfitingTenant;
+"#,
+            r#"
+-- List all tenants that should do a chore at some week (i.e., that are profiting from a certain chore at some week without an exemption).
+--
+-- tenant_id the tenant that profited
+-- chore_id the chore the tenant profited from
+-- week the week the tenant profited from the chore
+-- did_work 1 iff the tenant did the chore themselfes, else 0
+CREATE VIEW ProfitingTenant (tenant_id, chore_id, week, did_work) AS
+
+SELECT Tenant.id, ChoreLog.chore_id, ChoreLog.week, IIF(ChoreLog.worker = Tenant.id, 1, 0)
+FROM Tenant
+-- ensure tenant lives here in the week
+JOIN LivesIn ON Tenant.id = LivesIn.tenant_id
+JOIN ChoreLog ON
+    LivesIn.move_in_week <= ChoreLog.week
+    AND (LivesIn.move_out_week IS NULL OR LivesIn.move_out_week > ChoreLog.week)
+-- ensure tenant doesn't have an exemption
+LEFT JOIN TenantChoreExemption
+    ON TenantChoreExemption.tenant_id = Tenant.id
+    AND TenantChoreExemption.chore_id = ChoreLog.chore_id
+    AND TenantChoreExemption.start_week <= ChoreLog.week
+    AND (TenantChoreExemption.end_week IS NULL OR TenantChoreExemption.end_week > ChoreLog.week)
+WHERE TenantChoreExemption.chore_id IS NULL;
+"#,
+            // v2.0.1 //
         ];
 
         let mut next_migration = self.get_user_version().await?;

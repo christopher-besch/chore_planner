@@ -1,6 +1,6 @@
 services:
     ChorePlanner:
-        image: "chrisbesch/chore_planner:2.0.0"
+        image: "chrisbesch/chore_planner:2.0.1"
         container_name: "ChorePlanner"
 
         volumes:
