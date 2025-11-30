@@ -4,7 +4,6 @@ mod db;
 mod paginate;
 mod signal_bot;
 mod telegram_bot;
-mod test_bot;
 mod week;
 
 use crate::{

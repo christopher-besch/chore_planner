@@ -60,7 +60,7 @@ impl TelegramBotBuilder {
 
     /// Build a TelegramBot.
     /// Don't drop the TelegramBotBuilder while using the bot.
-    pub async fn build(&mut self) -> TelegramBot {
+    pub async fn build(&mut self) -> TelegramBot<'_> {
         let bot = TeloxideBot::new(self.token.as_ref().unwrap());
         self.listener = Some(update_listeners::polling_default(bot.clone()).await);
         let bot_username = format!("@{}", bot.get_me().await.unwrap().username.clone().unwrap());

@@ -1,8 +1,10 @@
+mod test_bot;
+
 use crate::{
     bot::{MessagableBot, ReplyMsg},
     command::handle_next_msg,
+    db::db_test::test_bot::TestBot,
     db::{rating::RATING_OPTIONS, Db},
-    test_bot::TestBot,
     week::Week,
 };
 
